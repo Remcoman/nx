@@ -1,4 +1,4 @@
-// TODO(katerina): Nx 18 -> remove Cypress
+// TODO(katerina): Nx 19 -> remove Cypress
 import { installedCypressVersion } from '@nx/cypress/src/utils/cypress-version';
 import { logger, Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
@@ -37,7 +37,8 @@ describe('react:storybook-configuration', () => {
   it('should configure everything and install correct dependencies', async () => {
     appTree = await createTestUILib('test-ui-lib');
     await storybookConfigurationGenerator(appTree, {
-      name: 'test-ui-lib',
+      project: 'test-ui-lib',
+      addPlugin: true,
     });
 
     expect(
@@ -59,8 +60,9 @@ describe('react:storybook-configuration', () => {
   it('should generate stories for components', async () => {
     appTree = await createTestUILib('test-ui-lib');
     await storybookConfigurationGenerator(appTree, {
-      name: 'test-ui-lib',
+      project: 'test-ui-lib',
       generateStories: true,
+      addPlugin: true,
     });
 
     expect(
@@ -89,9 +91,10 @@ describe('react:storybook-configuration', () => {
       `
     );
     await storybookConfigurationGenerator(appTree, {
-      name: 'test-ui-lib',
+      project: 'test-ui-lib',
       generateStories: true,
       js: true,
+      addPlugin: true,
     });
 
     expect(
@@ -102,7 +105,8 @@ describe('react:storybook-configuration', () => {
   it('should configure everything at once', async () => {
     appTree = await createTestAppLib('test-ui-app');
     await storybookConfigurationGenerator(appTree, {
-      name: 'test-ui-app',
+      project: 'test-ui-app',
+      addPlugin: true,
     });
 
     expect(appTree.exists('test-ui-app/.storybook/main.ts')).toBeTruthy();
@@ -112,8 +116,9 @@ describe('react:storybook-configuration', () => {
   it('should generate stories for components', async () => {
     appTree = await createTestAppLib('test-ui-app');
     await storybookConfigurationGenerator(appTree, {
-      name: 'test-ui-app',
+      project: 'test-ui-app',
       generateStories: true,
+      addPlugin: true,
     });
 
     // Currently the auto-generate stories feature only picks up components under the 'lib' directory.
@@ -130,9 +135,10 @@ describe('react:storybook-configuration', () => {
   it('should generate stories for components without interaction tests', async () => {
     appTree = await createTestAppLib('test-ui-app');
     await storybookConfigurationGenerator(appTree, {
-      name: 'test-ui-app',
+      project: 'test-ui-app',
       generateStories: true,
       interactionTests: false,
+      addPlugin: true,
     });
 
     expect(
@@ -159,6 +165,7 @@ export async function createTestUILib(
     unitTestRunner: 'none',
     name: libName,
     projectNameAndRootFormat: 'as-provided',
+    addPlugin: true,
   });
   return appTree;
 }
@@ -178,6 +185,7 @@ export async function createTestAppLib(
     name: libName,
     js: plainJS,
     projectNameAndRootFormat: 'as-provided',
+    addPlugin: true,
   });
 
   await componentGenerator(appTree, {

@@ -61,7 +61,6 @@ CREATE apps/angular/myremote/tsconfig.app.json
 CREATE apps/angular/myremote/tsconfig.editor.json
 CREATE apps/angular/myremote/tsconfig.json
 CREATE apps/angular/myremote/src/app/app.component.ts
-CREATE apps/angular/myremote/src/app/app.module.ts
 CREATE apps/angular/myremote/src/app/app.routes.ts
 CREATE apps/angular/myremote/src/main.ts
 CREATE apps/angular/myremote/.eslintrc.json
@@ -69,7 +68,6 @@ CREATE apps/angular/myremote/jest.config.ts
 CREATE apps/angular/myremote/src/test-setup.ts
 CREATE apps/angular/myremote/tsconfig.spec.json
 CREATE apps/angular/myremote/src/app/remote-entry/entry.component.ts
-CREATE apps/angular/myremote/src/app/remote-entry/entry.module.ts
 CREATE apps/angular/myremote/src/app/remote-entry/entry.routes.ts
 CREATE apps/angular/myremote/src/app/remote-entry/nx-welcome.component.ts
 CREATE apps/angular/myremote/module-federation.config.ts
@@ -172,7 +170,6 @@ CREATE apps/angular/myremote/tsconfig.app.json
 CREATE apps/angular/myremote/tsconfig.editor.json
 CREATE apps/angular/myremote/tsconfig.json
 CREATE apps/angular/myremote/src/app/app.component.ts
-CREATE apps/angular/myremote/src/app/app.module.ts
 CREATE apps/angular/myremote/src/app/app.routes.ts
 CREATE apps/angular/myremote/src/main.ts
 CREATE apps/angular/myremote/.eslintrc.json
@@ -180,7 +177,6 @@ CREATE apps/angular/myremote/jest.config.ts
 CREATE apps/angular/myremote/src/test-setup.ts
 CREATE apps/angular/myremote/tsconfig.spec.json
 CREATE apps/angular/myremote/src/app/remote-entry/entry.component.ts
-CREATE apps/angular/myremote/src/app/remote-entry/entry.module.ts
 CREATE apps/angular/myremote/src/app/remote-entry/entry.routes.ts
 CREATE apps/angular/myremote/src/app/remote-entry/nx-welcome.component.ts
 CREATE apps/angular/myremote/module-federation.config.ts
@@ -230,6 +226,9 @@ This is less memory and CPU intensive than `webpack-dev-server` but it does not 
 
 The purpose of the `serve-static` target is to allow you to serve your `host` application, along with all of
 the `remote` applications it depends on without being too resource intensive.
+
+This has been further expanded upon. When you serve the `host` application, Nx will build (or pull from cache) your
+`remote` applications and serve them all via a single file server, to further reduce resource consumption.
 
 ### Serving your Remote via your Host
 

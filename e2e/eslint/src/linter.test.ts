@@ -1,16 +1,12 @@
 import * as path from 'path';
 import {
-  checkFilesDoNotExist,
   checkFilesExist,
   cleanupProject,
   createFile,
-  getSelectedPackageManager,
   newProject,
   readFile,
   readJson,
   runCLI,
-  runCreateWorkspace,
-  setMaxWorkers,
   uniq,
   updateFile,
   updateJson,
@@ -25,7 +21,9 @@ describe('Linter', () => {
     let projScope;
 
     beforeAll(() => {
-      projScope = newProject();
+      projScope = newProject({
+        packages: ['@nx/react', '@nx/js', '@nx/eslint'],
+      });
       runCLI(`generate @nx/react:app ${myapp} --tags=validtag`);
       runCLI(`generate @nx/js:lib ${mylib}`);
     });
@@ -55,12 +53,8 @@ describe('Linter', () => {
         });
         updateFile('.eslintrc.json', JSON.stringify(eslintrc, null, 2));
 
-        // 1. linting should error when rules are not followed
         let out = runCLI(`lint ${myapp}`, { silenceError: true });
         expect(out).toContain('Unexpected console statement');
-
-        // 2. linting should not error when rules are not followed and the force flag is specified
-        expect(() => runCLI(`lint ${myapp} --force`)).not.toThrow();
 
         eslintrc.overrides.forEach((override) => {
           if (override.files.includes('*.ts')) {
@@ -71,7 +65,7 @@ describe('Linter', () => {
 
         // 3. linting should not error when all rules are followed
         out = runCLI(`lint ${myapp}`, { silenceError: true });
-        expect(out).toContain('All files pass linting');
+        expect(out).toContain('Successfully ran target lint');
       }, 1000000);
 
       it('should cache eslint with --cache', () => {
@@ -83,20 +77,22 @@ describe('Linter', () => {
         }
 
         // should generate a default cache file
-        expect(() => checkFilesExist(`.eslintcache`)).toThrow();
+        let cachePath = path.join('apps', myapp, '.eslintcache');
+        expect(() => checkFilesExist(cachePath)).toThrow();
         runCLI(`lint ${myapp} --cache`, { silenceError: true });
-        expect(() => checkFilesExist(`.eslintcache`)).not.toThrow();
-        expect(readCacheFile(`.eslintcache`)).toContain(
+        expect(() => checkFilesExist(cachePath)).not.toThrow();
+        expect(readCacheFile(cachePath)).toContain(
           path.normalize(`${myapp}/src/app/app.spec.tsx`)
         );
 
         // should let you specify a cache file location
-        expect(() => checkFilesExist(`my-cache`)).toThrow();
+        cachePath = path.join('apps', myapp, 'my-cache');
+        expect(() => checkFilesExist(cachePath)).toThrow();
         runCLI(`lint ${myapp} --cache --cache-location="my-cache"`, {
           silenceError: true,
         });
-        expect(() => checkFilesExist(`my-cache/${myapp}`)).not.toThrow();
-        expect(readCacheFile(`my-cache/${myapp}`)).toContain(
+        expect(() => checkFilesExist(cachePath)).not.toThrow();
+        expect(readCacheFile(cachePath)).toContain(
           path.normalize(`${myapp}/src/app/app.spec.tsx`)
         );
       });
@@ -111,8 +107,9 @@ describe('Linter', () => {
         updateFile('.eslintrc.json', JSON.stringify(eslintrc, null, 2));
 
         const outputFile = 'a/b/c/lint-output.json';
+        const outputFilePath = path.join('apps', myapp, outputFile);
         expect(() => {
-          checkFilesExist(outputFile);
+          checkFilesExist(outputFilePath);
         }).toThrow();
         const stdout = runCLI(
           `lint ${myapp} --output-file="${outputFile}" --format=json`,
@@ -121,8 +118,8 @@ describe('Linter', () => {
           }
         );
         expect(stdout).not.toContain('Unexpected console statement');
-        expect(() => checkFilesExist(outputFile)).not.toThrow();
-        const outputContents = JSON.parse(readFile(outputFile));
+        expect(() => checkFilesExist(outputFilePath)).not.toThrow();
+        const outputContents = JSON.parse(readFile(outputFilePath));
         const outputForApp: any = Object.values(outputContents).filter(
           (result: any) =>
             result.filePath.includes(path.normalize(`${myapp}/src/main.ts`))
@@ -166,7 +163,7 @@ describe('Linter', () => {
         );
         updateFile(newRulePath, updatedRuleContents);
 
-        const newRuleNameForUsage = `@nx/workspace/${newRuleName}`;
+        const newRuleNameForUsage = `@nx/workspace-${newRuleName}`;
 
         // Add the new workspace rule to the lint config and run linting
         const eslintrc = readJson('.eslintrc.json');
@@ -243,21 +240,6 @@ describe('Linter', () => {
           'A project tagged with "validtag" can only depend on libs tagged with "validtag"'
         );
       }, 1000000);
-
-      it('should print the effective configuration for a file specified using --printConfig', () => {
-        const eslint = readJson('.eslintrc.json');
-        eslint.overrides.push({
-          files: ['src/index.ts'],
-          rules: {
-            'specific-rule': 'off',
-          },
-        });
-        updateFile('.eslintrc.json', JSON.stringify(eslint, null, 2));
-        const out = runCLI(`lint ${myapp} --printConfig src/index.ts`, {
-          silenceError: true,
-        });
-        expect(out).toContain('"specific-rule": [');
-      }, 1000000);
     });
 
     describe('workspace boundary rules', () => {
@@ -266,9 +248,10 @@ describe('Linter', () => {
       const libC = uniq('tslib-c');
 
       beforeAll(() => {
-        runCLI(`generate @nx/js:lib ${libA}`);
-        runCLI(`generate @nx/js:lib ${libB}`);
-        runCLI(`generate @nx/js:lib ${libC}`);
+        // make these libs non-buildable to avoid dep-checks triggering lint errors
+        runCLI(`generate @nx/js:lib ${libA} --bundler=none`);
+        runCLI(`generate @nx/js:lib ${libB} --bundler=none`);
+        runCLI(`generate @nx/js:lib ${libC} --bundler=none`);
 
         /**
          * create tslib-a structure
@@ -452,24 +435,29 @@ describe('Linter', () => {
     describe('dependency checks', () => {
       beforeAll(() => {
         updateJson(`libs/${mylib}/.eslintrc.json`, (json) => {
-          json.overrides = [
-            ...json.overrides,
-            {
-              files: ['*.json'],
-              parser: 'jsonc-eslint-parser',
-              rules: {
-                '@nx/dependency-checks': 'error',
+          if (!json.overrides.some((o) => o.rules?.['@nx/dependency-checks'])) {
+            json.overrides = [
+              ...json.overrides,
+              {
+                files: ['*.json'],
+                parser: 'jsonc-eslint-parser',
+                rules: {
+                  '@nx/dependency-checks': 'error',
+                },
               },
-            },
-          ];
+            ];
+          }
           return json;
         });
-        updateJson(`libs/${mylib}/project.json`, (json) => {
-          json.targets.lint.options.lintFilePatterns = [
-            `libs/${mylib}/**/*.ts`,
-            `libs/${mylib}/project.json`,
-            `libs/${mylib}/package.json`,
-          ];
+      });
+
+      afterAll(() => {
+        // ensure the rule for dependency checks is removed
+        // so that it does not affect other tests
+        updateJson(`libs/${mylib}/.eslintrc.json`, (json) => {
+          json.overrides = json.overrides.filter(
+            (o) => !o.rules?.['@nx/dependency-checks']
+          );
           return json;
         });
       });
@@ -480,14 +468,14 @@ describe('Linter', () => {
         const tslibVersion = rootPackageJson.dependencies['tslib'];
 
         let out = runCLI(`lint ${mylib}`, { silenceError: true });
-        expect(out).toContain('All files pass linting');
+        expect(out).toContain('Successfully ran target lint');
 
         // make an explict dependency to nx
         updateFile(
           `libs/${mylib}/src/lib/${mylib}.ts`,
           (content) =>
             `import { names } from '@nx/devkit';\n\n` +
-            content.replace(/=> .*;/, `=> names(${mylib}).className;`)
+            content.replace(/=> .*;/, `=> names('${mylib}').className;`)
         );
 
         // output should now report missing dependency
@@ -534,90 +522,20 @@ describe('Linter', () => {
     });
   });
 
-  describe('Flat config', () => {
-    const packageManager = getSelectedPackageManager() || 'pnpm';
-
-    afterEach(() => cleanupProject());
-
-    it('should convert integrated to flat config', () => {
-      const myapp = uniq('myapp');
-      const mylib = uniq('mylib');
-
-      runCreateWorkspace(myapp, {
-        preset: 'react-monorepo',
-        appName: myapp,
-        style: 'css',
-        packageManager,
-        bundler: 'vite',
-        e2eTestRunner: 'none',
-      });
-      runCLI(
-        `generate @nx/js:lib ${mylib} --directory libs/${mylib} --projectNameAndRootFormat as-provided`
-      );
-
-      // migrate to flat structure
-      runCLI(`generate @nx/eslint:convert-to-flat-config`);
-      checkFilesExist(
-        'eslint.config.js',
-        `apps/${myapp}/eslint.config.js`,
-        `libs/${mylib}/eslint.config.js`
-      );
-      checkFilesDoNotExist(
-        '.eslintrc.json',
-        `apps/${myapp}/.eslintrc.json`,
-        `libs/${mylib}/.eslintrc.json`
-      );
-
-      const outFlat = runCLI(`affected -t lint`, {
-        silenceError: true,
-      });
-      expect(outFlat).toContain('All files pass linting');
-    }, 1000000);
-
-    it('should convert standalone to flat config', () => {
-      const myapp = uniq('myapp');
-      const mylib = uniq('mylib');
-
-      runCreateWorkspace(myapp, {
-        preset: 'react-standalone',
-        appName: myapp,
-        style: 'css',
-        packageManager,
-        bundler: 'vite',
-        e2eTestRunner: 'none',
-      });
-      runCLI(`generate @nx/js:lib ${mylib}`);
-
-      // migrate to flat structure
-      runCLI(`generate @nx/eslint:convert-to-flat-config`);
-      checkFilesExist(
-        'eslint.config.js',
-        `${mylib}/eslint.config.js`,
-        'eslint.base.config.js'
-      );
-      checkFilesDoNotExist(
-        '.eslintrc.json',
-        `${mylib}/.eslintrc.json`,
-        '.eslintrc.base.json'
-      );
-
-      const outFlat = runCLI(`affected -t lint`, {
-        silenceError: true,
-      });
-      expect(outFlat).toContain('All files pass linting');
-    }, 1000000);
-  });
-
   describe('Root projects migration', () => {
-    beforeEach(() => newProject());
+    beforeEach(() =>
+      newProject({
+        packages: ['@nx/react', '@nx/js', '@nx/angular', '@nx/node'],
+      })
+    );
     afterEach(() => cleanupProject());
 
     function verifySuccessfulStandaloneSetup(myapp: string) {
       expect(runCLI(`lint ${myapp}`, { silenceError: true })).toContain(
-        'All files pass linting'
+        'Successfully ran target lint'
       );
       expect(runCLI(`lint e2e`, { silenceError: true })).toContain(
-        'All files pass linting'
+        'Successfully ran target lint'
       );
       expect(() => checkFilesExist(`.eslintrc.base.json`)).toThrow();
 
@@ -631,13 +549,13 @@ describe('Linter', () => {
 
     function verifySuccessfulMigratedSetup(myapp: string, mylib: string) {
       expect(runCLI(`lint ${myapp}`, { silenceError: true })).toContain(
-        'All files pass linting'
+        'Successfully ran target lint'
       );
       expect(runCLI(`lint e2e`, { silenceError: true })).toContain(
-        'All files pass linting'
+        'Successfully ran target lint'
       );
       expect(runCLI(`lint ${mylib}`, { silenceError: true })).toContain(
-        'All files pass linting'
+        'Successfully ran target lint'
       );
       expect(() => checkFilesExist(`.eslintrc.base.json`)).not.toThrow();
 
@@ -671,11 +589,12 @@ describe('Linter', () => {
       let e2eEslint = readJson('e2e/.eslintrc.json');
 
       // should have plugin extends
-      expect(appEslint.overrides[0].extends).toBeDefined();
-      expect(appEslint.overrides[1].extends).toBeDefined();
-      expect(
-        e2eEslint.overrides.some((override) => override.extends)
-      ).toBeTruthy();
+      let appOverrides = JSON.stringify(appEslint.overrides);
+      expect(appOverrides).toContain('plugin:@nx/javascript');
+      expect(appOverrides).toContain('plugin:@nx/typescript');
+      let e2eOverrides = JSON.stringify(e2eEslint.overrides);
+      expect(e2eOverrides).toContain('plugin:@nx/javascript');
+      expect(e2eOverrides).toContain('plugin:@nx/typescript');
 
       runCLI(`generate @nx/js:lib ${mylib} --unitTestRunner=jest`);
       verifySuccessfulMigratedSetup(myapp, mylib);
@@ -684,11 +603,12 @@ describe('Linter', () => {
       e2eEslint = readJson('e2e/.eslintrc.json');
 
       // should have no plugin extends
-      expect(appEslint.overrides[0].extends).toBeUndefined();
-      expect(appEslint.overrides[1].extends).toBeUndefined();
-      expect(
-        e2eEslint.overrides.some((override) => override.extends)
-      ).toBeFalsy();
+      appOverrides = JSON.stringify(appEslint.overrides);
+      expect(appOverrides).not.toContain('plugin:@nx/javascript');
+      expect(appOverrides).not.toContain('plugin:@nx/typescript');
+      e2eOverrides = JSON.stringify(e2eEslint.overrides);
+      expect(e2eOverrides).not.toContain('plugin:@nx/javascript');
+      expect(e2eOverrides).not.toContain('plugin:@nx/typescript');
     });
 
     it('(Angular standalone) should set root project config to app and e2e app and migrate when another lib is added', () => {
@@ -704,10 +624,10 @@ describe('Linter', () => {
       let e2eEslint = readJson('e2e/.eslintrc.json');
 
       // should have plugin extends
-      expect(appEslint.overrides[1].extends).toBeDefined();
-      expect(
-        e2eEslint.overrides.some((override) => override.extends)
-      ).toBeTruthy();
+      let appOverrides = JSON.stringify(appEslint.overrides);
+      expect(appOverrides).toContain('plugin:@nx/typescript');
+      let e2eOverrides = JSON.stringify(e2eEslint.overrides);
+      expect(e2eOverrides).toContain('plugin:@nx/typescript');
 
       runCLI(`generate @nx/js:lib ${mylib} --no-interactive`);
       verifySuccessfulMigratedSetup(myapp, mylib);
@@ -716,12 +636,10 @@ describe('Linter', () => {
       e2eEslint = readJson('e2e/.eslintrc.json');
 
       // should have no plugin extends
-      expect(appEslint.overrides[1].extends).toEqual([
-        'plugin:@nx/angular-template',
-      ]);
-      expect(
-        e2eEslint.overrides.some((override) => override.extends)
-      ).toBeFalsy();
+      appOverrides = JSON.stringify(appEslint.overrides);
+      expect(appOverrides).not.toContain('plugin:@nx/typescript');
+      e2eOverrides = JSON.stringify(e2eEslint.overrides);
+      expect(e2eOverrides).not.toContain('plugin:@nx/typescript');
     });
 
     it('(Node standalone) should set root project config to app and e2e app and migrate when another lib is added', async () => {
@@ -731,16 +649,18 @@ describe('Linter', () => {
       runCLI(
         `generate @nx/node:app ${myapp} --rootProject=true --no-interactive`
       );
-      setMaxWorkers('project.json');
       verifySuccessfulStandaloneSetup(myapp);
 
       let appEslint = readJson('.eslintrc.json');
       let e2eEslint = readJson('e2e/.eslintrc.json');
 
       // should have plugin extends
-      expect(appEslint.overrides[0].extends).toBeDefined();
-      expect(appEslint.overrides[1].extends).toBeDefined();
-      expect(e2eEslint.overrides[0].extends).toBeDefined();
+      let appOverrides = JSON.stringify(appEslint.overrides);
+      expect(appOverrides).toContain('plugin:@nx/javascript');
+      expect(appOverrides).toContain('plugin:@nx/typescript');
+      let e2eOverrides = JSON.stringify(e2eEslint.overrides);
+      expect(e2eOverrides).toContain('plugin:@nx/javascript');
+      expect(e2eOverrides).toContain('plugin:@nx/typescript');
 
       runCLI(`generate @nx/js:lib ${mylib} --no-interactive`);
       verifySuccessfulMigratedSetup(myapp, mylib);
@@ -749,9 +669,13 @@ describe('Linter', () => {
       e2eEslint = readJson('e2e/.eslintrc.json');
 
       // should have no plugin extends
-      expect(appEslint.overrides[0].extends).toBeUndefined();
-      expect(appEslint.overrides[1].extends).toBeUndefined();
-      expect(e2eEslint.overrides[0].extends).toBeUndefined();
+      // should have no plugin extends
+      appOverrides = JSON.stringify(appEslint.overrides);
+      expect(appOverrides).not.toContain('plugin:@nx/javascript');
+      expect(appOverrides).not.toContain('plugin:@nx/typescript');
+      e2eOverrides = JSON.stringify(e2eEslint.overrides);
+      expect(e2eOverrides).not.toContain('plugin:@nx/javascript');
+      expect(e2eOverrides).not.toContain('plugin:@nx/typescript');
     });
   });
 });

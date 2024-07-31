@@ -10,7 +10,7 @@ let {
   combineOptionsForExecutor,
 } = requireNx();
 
-// TODO: Remove this in Nx 18 when Nx 16.7.0 is no longer supported
+// TODO: Remove this in Nx 19 when Nx 16.7.0 is no longer supported
 combineOptionsForExecutor =
   combineOptionsForExecutor ??
   require('nx/src/utils/params').combineOptionsForExecutor;
@@ -34,12 +34,21 @@ export function readTargetOptions<T = any>(
 
   const targetConfiguration = projectConfiguration.targets[target];
 
-  // TODO(v18): remove Workspaces.
+  if (!targetConfiguration) {
+    throw new Error(`Unable to find target ${target} for project ${project}`);
+  }
+
+  // TODO(v19): remove Workspaces.
   const ws = new Workspaces(context.root);
   const [nodeModule, executorName] = targetConfiguration.executor.split(':');
   const { schema } = getExecutorInformation
-    ? getExecutorInformation(nodeModule, executorName, context.root)
-    : // TODO(v18): remove readExecutor. This is to be backwards compatible with Nx 16.5 and below.
+    ? getExecutorInformation(
+        nodeModule,
+        executorName,
+        context.root,
+        context.projectsConfigurations?.projects ?? context.workspace.projects
+      )
+    : // TODO(v19): remove readExecutor. This is to be backwards compatible with Nx 16.5 and below.
       (ws as any).readExecutor(nodeModule, executorName);
 
   const defaultProject = calculateDefaultProjectName
@@ -49,7 +58,7 @@ export function readTargetOptions<T = any>(
         { version: 2, projects: context.projectsConfigurations.projects },
         context.nxJsonConfiguration
       )
-    : // TODO(v18): remove calculateDefaultProjectName. This is to be backwards compatible with Nx 16.5 and below.
+    : // TODO(v19): remove calculateDefaultProjectName. This is to be backwards compatible with Nx 16.5 and below.
       (ws as any).calculateDefaultProjectName(
         context.cwd,
         { version: 2, projects: context.projectsConfigurations.projects },

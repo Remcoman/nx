@@ -45,6 +45,7 @@
             "ignoredDependencies": [
               "nx",
               "eslint",
+              "vite",
               "rxjs",
               "semver",
               // These are installed by ensurePackage so missing in package.json
@@ -71,6 +72,7 @@
               "@ngrx/store",
               "@storybook/angular",
               "@module-federation/node",
+              "@nguniversal/builders",
               // installed dynamically by the library generator
               "ng-packagr",
               // ng-packagr deps, some are handled if not installed
@@ -83,8 +85,7 @@
               "ora",
               "convert-source-map",
               "postcss",
-              "postcss-import",
-              "postcss-preset-env",
+              "autoprefixer",
               "postcss-url",
               "sass",
               "stylus",

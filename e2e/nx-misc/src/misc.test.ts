@@ -13,7 +13,6 @@ import {
   runCLI,
   runCLIAsync,
   runCommand,
-  setMaxWorkers,
   tmpProjPath,
   uniq,
   updateFile,
@@ -26,7 +25,11 @@ import { major } from 'semver';
 import { join } from 'path';
 
 describe('Nx Commands', () => {
-  beforeAll(() => newProject());
+  beforeAll(() =>
+    newProject({
+      packages: ['@nx/web', '@nx/angular', '@nx/next'],
+    })
+  );
 
   afterAll(() => cleanupProject());
 
@@ -40,7 +43,6 @@ describe('Nx Commands', () => {
 
       runCLI(`generate @nx/web:app ${app1} --tags e2etag`);
       runCLI(`generate @nx/web:app ${app2}`);
-      setMaxWorkers(join('apps', app1, 'project.json'));
 
       const s = runCLI('show projects').split('\n');
 
@@ -150,7 +152,6 @@ describe('Nx Commands', () => {
 
     beforeAll(async () => {
       runCLI(`generate @nx/web:app ${myapp}`);
-      setMaxWorkers(join('apps', myapp, 'project.json'));
       runCLI(`generate @nx/js:lib ${mylib}`);
     });
 
@@ -309,7 +310,7 @@ describe('Nx Commands', () => {
 // TODO(colum): Change the fetcher to allow incremental migrations over multiple versions, allowing for beforeAll
 describe('migrate', () => {
   beforeEach(() => {
-    newProject();
+    newProject({ packages: [] });
 
     updateFile(
       `./node_modules/migrate-parent-package/package.json`,
@@ -428,7 +429,6 @@ describe('migrate', () => {
       'migrate migrate-parent-package@2.0.0 --from="migrate-parent-package@1.0.0"',
       {
         env: {
-          ...process.env,
           NX_MIGRATE_SKIP_INSTALL: 'true',
           NX_MIGRATE_USE_LOCAL: 'true',
         },
@@ -479,7 +479,6 @@ describe('migrate', () => {
     // runs migrations
     runCLI('migrate --run-migrations=migrations.json', {
       env: {
-        ...process.env,
         NX_MIGRATE_SKIP_INSTALL: 'true',
         NX_MIGRATE_USE_LOCAL: 'true',
       },
@@ -493,7 +492,6 @@ describe('migrate', () => {
       'migrate migrate-parent-package@2.0.0 --from="migrate-parent-package@1.0.0"',
       {
         env: {
-          ...process.env,
           NX_MIGRATE_SKIP_INSTALL: 'true',
           NX_MIGRATE_USE_LOCAL: 'true',
         },
@@ -503,7 +501,6 @@ describe('migrate', () => {
     // runs migrations with createCommits enabled
     runCLI('migrate --run-migrations=migrations.json --create-commits', {
       env: {
-        ...process.env,
         NX_MIGRATE_SKIP_INSTALL: 'true',
         NX_MIGRATE_USE_LOCAL: 'true',
       },
@@ -522,7 +519,6 @@ describe('migrate', () => {
         'migrate migrate-parent-package@2.0.0 --from="migrate-parent-package@1.0.0"',
         {
           env: {
-            ...process.env,
             NX_MIGRATE_SKIP_INSTALL: 'true',
             NX_MIGRATE_USE_LOCAL: 'true',
           },
@@ -534,7 +530,6 @@ describe('migrate', () => {
         `migrate --run-migrations=migrations.json --create-commits --commit-prefix="'chore(core): AUTOMATED - '"`,
         {
           env: {
-            ...process.env,
             NX_MIGRATE_SKIP_INSTALL: 'true',
             NX_MIGRATE_USE_LOCAL: 'true',
           },
@@ -553,7 +548,6 @@ describe('migrate', () => {
       'migrate migrate-parent-package@2.0.0 --from="migrate-parent-package@1.0.0"',
       {
         env: {
-          ...process.env,
           NX_MIGRATE_SKIP_INSTALL: 'true',
           NX_MIGRATE_USE_LOCAL: 'true',
         },
@@ -565,7 +559,6 @@ describe('migrate', () => {
       `migrate --run-migrations=migrations.json --commit-prefix CUSTOM_PREFIX`,
       {
         env: {
-          ...process.env,
           NX_MIGRATE_SKIP_INSTALL: 'true',
           NX_MIGRATE_USE_LOCAL: 'true',
         },
@@ -584,7 +577,6 @@ describe('migrate', () => {
     // Invalid: runs migrations with a custom commit-prefix but without enabling --create-commits
     const output = runCLI(`migrate --run-migrations`, {
       env: {
-        ...process.env,
         NX_MIGRATE_SKIP_INSTALL: 'true',
         NX_MIGRATE_USE_LOCAL: 'true',
       },
@@ -602,7 +594,6 @@ describe('migrate', () => {
     // Invalid: runs migrations with a custom commit-prefix but without enabling --create-commits
     const output = runCLI(`migrate --run-migrations --if-exists`, {
       env: {
-        ...process.env,
         NX_MIGRATE_SKIP_INSTALL: 'true',
         NX_MIGRATE_USE_LOCAL: 'true',
       },
@@ -651,7 +642,7 @@ describe('global installation', () => {
 
   describe('inside nx directory', () => {
     beforeAll(() => {
-      newProject();
+      newProject({ packages: [] });
     });
 
     it('should invoke Nx commands from local repo', () => {

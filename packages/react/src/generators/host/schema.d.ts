@@ -1,6 +1,6 @@
 import type { ProjectNameAndRootFormat } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import type { Linter } from '@nx/eslint';
-import type { SupportedStyles } from '../../../typings';
+import type { SupportedStyles } from '../../../typings/style';
 
 export interface Schema {
   classComponent?: boolean;
@@ -8,7 +8,7 @@ export interface Schema {
   devServerPort?: number;
   directory?: string;
   projectNameAndRootFormat?: ProjectNameAndRootFormat;
-  e2eTestRunner: 'cypress' | 'none';
+  e2eTestRunner: 'cypress' | 'playwright' | 'none';
   globalCss?: boolean;
   js?: boolean;
   linter: Linter;
@@ -25,10 +25,13 @@ export interface Schema {
   unitTestRunner: 'jest' | 'vitest' | 'none';
   minimal?: boolean;
   typescriptConfiguration?: boolean;
+  dynamic?: boolean;
+  addPlugin?: boolean;
 }
 
 export interface NormalizedSchema extends Schema {
   appProjectRoot: string;
   e2eProjectName: string;
   projectName: string;
+  addPlugin?: boolean;
 }

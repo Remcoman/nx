@@ -7,57 +7,49 @@ import {
 import { lt } from 'semver';
 import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
 import type { Schema } from '../schema';
-import { join } from 'path';
 
-export function generateSSRFiles(tree: Tree, schema: Schema) {
-  const projectConfig = readProjectConfiguration(tree, schema.project);
-  const projectRoot = projectConfig.root;
-  const browserBundleOutputPath =
-    projectConfig.targets.build.options.outputPath;
+export function generateSSRFiles(
+  tree: Tree,
+  schema: Schema,
+  isUsingApplicationBuilder: boolean
+) {
+  const { root: projectRoot, targets } = readProjectConfiguration(
+    tree,
+    schema.project
+  );
+
+  if (
+    targets.server ||
+    (isUsingApplicationBuilder && targets.build.options?.server !== undefined)
+  ) {
+    // server has already been added
+    return;
+  }
 
   const pathToFiles = joinPathFragments(__dirname, '..', 'files');
-
-  generateFiles(tree, join(pathToFiles, 'base'), projectRoot, {
-    ...schema,
-    tpl: '',
-  });
+  const { version: angularVersion } = getInstalledAngularVersionInfo(tree);
 
   if (schema.standalone) {
     generateFiles(
       tree,
       joinPathFragments(pathToFiles, 'standalone'),
       projectRoot,
-
-      { ...schema, browserBundleOutputPath, tpl: '' }
+      { ...schema, tpl: '' }
     );
   } else {
     generateFiles(
       tree,
       joinPathFragments(pathToFiles, 'ngmodule', 'base'),
       projectRoot,
-
-      { ...schema, browserBundleOutputPath, tpl: '' }
+      { ...schema, tpl: '' }
     );
 
-    const { major: angularMajorVersion, version: angularVersion } =
-      getInstalledAngularVersionInfo(tree);
-
-    if (angularMajorVersion < 15) {
-      generateFiles(
-        tree,
-        joinPathFragments(pathToFiles, 'ngmodule', 'v14'),
-        projectRoot,
-
-        { ...schema, browserBundleOutputPath, tpl: '' }
-      );
-    }
     if (lt(angularVersion, '15.2.0')) {
       generateFiles(
         tree,
         joinPathFragments(pathToFiles, 'ngmodule', 'pre-v15-2'),
         projectRoot,
-
-        { ...schema, browserBundleOutputPath, tpl: '' }
+        { ...schema, tpl: '' }
       );
     }
   }

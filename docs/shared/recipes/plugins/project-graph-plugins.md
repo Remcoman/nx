@@ -59,16 +59,12 @@ A simplified version of Nx's built-in `project.json` plugin is shown below, whic
 export const createNodes: CreateNodes = [
   '**/project.json',
   (projectConfigurationFile: string, opts, context: CreateNodesContext) => {
-    const projectConfiguration = readJson(projectConfigurationFile);
-    const projectRoot = dirname(projectConfigurationFile);
-    const projectName = projectConfiguration.name;
+    const projectConfiguration = readJsonFile(projectConfigurationFile);
+    const root = dirname(projectConfigurationFile);
 
     return {
       projects: {
-        [projectName]: {
-          ...projectConfiguration,
-          root: projectRoot,
-        },
+        [root]: projectConfiguration,
       },
     };
   },
@@ -244,12 +240,10 @@ export const createNodes: CreateNodes<MyPluginOptions> = [
   '**/project.json',
   (fileName, opts, ctx) => {
     const root = dirname(fileName);
-    const name = basename(fileName);
 
     return {
       projects: {
-        [name]: {
-          root,
+        [root]: {
           tags: opts.tagName ? [opts.tagName] : [],
         },
       },
@@ -262,7 +256,7 @@ This functionality is available in Nx 17 or higher.
 
 ## Visualizing the Project Graph
 
-You can then visualize the project graph as described [here](/core-features/explore-graph). However, there is a cache that Nx uses to avoid recalculating the project graph as much as possible. As you develop your project graph plugin, it might be a good idea to set the following environment variable to disable the project graph cache: `NX_CACHE_PROJECT_GRAPH=false`.
+You can then visualize the project graph as described [here](/features/explore-graph). However, there is a cache that Nx uses to avoid recalculating the project graph as much as possible. As you develop your project graph plugin, it might be a good idea to set the following environment variable to disable the project graph cache: `NX_CACHE_PROJECT_GRAPH=false`.
 
 It might also be a good idea to ensure that the dep graph is not running on the nx daemon by setting `NX_DAEMON=false`, as this will ensure you will be able to see any `console.log` statements you add as you're developing.
 

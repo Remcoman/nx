@@ -69,14 +69,17 @@ export async function createStorybookTestWorkspaceForLib(
     linter: Linter.EsLint,
     publishable: false,
     simpleName: false,
-    skipFormat: false,
+    skipFormat: true,
     unitTestRunner: UnitTestRunner.Jest,
     projectNameAndRootFormat: 'as-provided',
+    standalone: false,
   });
 
   await componentGenerator(tree, {
     name: 'test-button',
     project: libName,
+    standalone: false,
+    skipFormat: true,
   });
 
   tree.write(
@@ -121,6 +124,8 @@ export class TestButtonComponent {
     project: libName,
     path: `${libName}/src/lib/barrel`,
     module: 'barrel',
+    standalone: false,
+    skipFormat: true,
   });
 
   tree.write(
@@ -152,6 +157,8 @@ export class BarrelModule {}`
     project: libName,
     path: `${libName}/src/lib/variable-declare`,
     module: 'variable-declare',
+    standalone: false,
+    skipFormat: true,
   });
 
   await componentGenerator(tree, {
@@ -159,6 +166,8 @@ export class BarrelModule {}`
     project: libName,
     path: `${libName}/src/lib/variable-declare`,
     module: 'variable-declare',
+    standalone: false,
+    skipFormat: true,
   });
 
   tree.write(
@@ -192,6 +201,8 @@ export class VariableDeclareModule {}`
     project: libName,
     path: `${libName}/src/lib/variable-spread-declare`,
     module: 'variable-spread-declare',
+    standalone: false,
+    skipFormat: true,
   });
 
   await componentGenerator(tree, {
@@ -199,6 +210,8 @@ export class VariableDeclareModule {}`
     project: libName,
     path: `${libName}/src/lib/variable-spread-declare`,
     module: 'variable-spread-declare',
+    standalone: false,
+    skipFormat: true,
   });
 
   await componentGenerator(tree, {
@@ -206,6 +219,8 @@ export class VariableDeclareModule {}`
     project: libName,
     path: `${libName}/src/lib/variable-spread-declare`,
     module: 'variable-spread-declare',
+    standalone: false,
+    skipFormat: true,
   });
 
   tree.write(
@@ -239,6 +254,8 @@ export class VariableSpreadDeclareModule {}`
     project: libName,
     path: `${libName}/src/lib/static-member-declarations`,
     module: 'static-member-declarations',
+    standalone: false,
+    skipFormat: true,
   });
 
   await componentGenerator(tree, {
@@ -246,6 +263,8 @@ export class VariableSpreadDeclareModule {}`
     project: libName,
     path: `${libName}/src/lib/static-member-declarations`,
     module: 'static-member-declarations',
+    standalone: false,
+    skipFormat: true,
   });
 
   tree.write(
@@ -277,11 +296,15 @@ export class StaticMemberDeclarationsModule {
     project: libName,
     module: 'nested',
     path: `${libName}/src/lib/nested`,
+    standalone: false,
+    skipFormat: true,
   });
 
   await componentGenerator(tree, {
     name: 'test-other',
     project: libName,
+    standalone: false,
+    skipFormat: true,
   });
 
   return tree;

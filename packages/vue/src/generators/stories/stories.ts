@@ -13,7 +13,7 @@ import {
 import { basename, join } from 'path';
 import { nxVersion } from '../../utils/versions';
 import { createComponentStories } from './lib/component-story';
-import minimatch = require('minimatch');
+import { minimatch } from 'minimatch';
 
 export interface StorybookStoriesSchema {
   project: string;
@@ -33,7 +33,7 @@ export async function createAllStories(
   projectConfiguration: ProjectConfiguration,
   ignorePaths?: string[]
 ) {
-  const { sourceRoot, root } = projectConfiguration;
+  const { sourceRoot } = projectConfiguration;
   let componentPaths: string[] = [];
   const pathsToCheck = [
     joinPathFragments(sourceRoot, 'app'), // Default component folder for apps

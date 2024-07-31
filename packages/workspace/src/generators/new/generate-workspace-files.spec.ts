@@ -38,6 +38,8 @@ describe('@nx/workspace:generateWorkspaceFiles', () => {
             Preset.ReactStandalone,
             Preset.VueMonorepo,
             Preset.VueStandalone,
+            Preset.Nuxt,
+            Preset.NuxtStandalone,
             Preset.AngularMonorepo,
             Preset.AngularStandalone,
             Preset.Nest,
@@ -100,31 +102,13 @@ describe('@nx/workspace:generateWorkspaceFiles', () => {
           ],
           "sharedGlobals": [],
         },
-        "targetDefaults": {
-          "build": {
-            "cache": true,
-            "dependsOn": [
-              "^build",
-            ],
-            "inputs": [
-              "production",
-              "^production",
-            ],
-          },
-          "e2e": {
-            "cache": true,
-          },
-          "lint": {
-            "cache": true,
-          },
-        },
       }
     `);
     const validateNxJson = ajv.compile(nxSchema);
     expect(validateNxJson(nxJson)).toEqual(true);
   });
 
-  it('should setup named inputs and target defaults for non-empty presets', async () => {
+  it('should setup named inputs for non-empty presets', async () => {
     await generateWorkspaceFiles(tree, {
       name: 'proj',
       directory: 'proj',
@@ -145,24 +129,6 @@ describe('@nx/workspace:generateWorkspaceFiles', () => {
             "default",
           ],
           "sharedGlobals": [],
-        },
-        "targetDefaults": {
-          "build": {
-            "cache": true,
-            "dependsOn": [
-              "^build",
-            ],
-            "inputs": [
-              "production",
-              "^production",
-            ],
-          },
-          "e2e": {
-            "cache": true,
-          },
-          "lint": {
-            "cache": true,
-          },
         },
       }
     `);
@@ -215,20 +181,6 @@ describe('@nx/workspace:generateWorkspaceFiles', () => {
       {
         "$schema": "./node_modules/nx/schemas/nx-schema.json",
         "extends": "nx/presets/npm.json",
-        "targetDefaults": {
-          "build": {
-            "cache": true,
-            "dependsOn": [
-              "^build",
-            ],
-          },
-          "e2e": {
-            "cache": true,
-          },
-          "lint": {
-            "cache": true,
-          },
-        },
       }
     `);
 

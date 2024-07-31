@@ -26,6 +26,7 @@ export interface RunOptions {
   cloud: boolean;
   dte: boolean;
   batch: boolean;
+  useAgents: boolean;
 }
 
 export function withRunOptions<T>(yargs: Argv<T>): Argv<T & RunOptions> {
@@ -90,6 +91,11 @@ export function withRunOptions<T>(yargs: Argv<T>): Argv<T & RunOptions> {
     .options('dte', {
       type: 'boolean',
       hidden: true,
+    })
+    .options('useAgents', {
+      type: 'boolean',
+      hidden: true,
+      alias: 'agents',
     }) as Argv<Omit<RunOptions, 'exclude' | 'batch'>> as any;
 }
 
@@ -224,9 +230,24 @@ export function withOverrides<T extends { _: Array<string | number> }>(
   };
 }
 
+const allOutputStyles = [
+  'dynamic',
+  'static',
+  'stream',
+  'stream-without-prefixes',
+  'compact',
+] as const;
+
+export type OutputStyle = typeof allOutputStyles[number];
+
 export function withOutputStyleOption(
   yargs: Argv,
-  choices = ['dynamic', 'static', 'stream', 'stream-without-prefixes']
+  choices: ReadonlyArray<OutputStyle> = [
+    'dynamic',
+    'static',
+    'stream',
+    'stream-without-prefixes',
+  ]
 ) {
   return yargs.option('output-style', {
     describe: 'Defines how Nx emits outputs tasks logs',
@@ -295,13 +316,7 @@ export function withRunOneOptions(yargs: Argv) {
   );
 
   const res = withRunOptions(
-    withOutputStyleOption(withConfiguration(yargs), [
-      'dynamic',
-      'static',
-      'stream',
-      'stream-without-prefixes',
-      'compact',
-    ])
+    withOutputStyleOption(withConfiguration(yargs), allOutputStyles)
   )
     .parserConfiguration({
       'strip-dashed': true,
@@ -331,7 +346,10 @@ export function parseCSV(args: string[] | string): string[] {
     return [];
   }
   if (Array.isArray(args)) {
-    return args;
+    // If parseCSV is used on `type: 'array'`, the first option may be something like ['a,b,c'].
+    return args.length === 1 && args[0].includes(',')
+      ? parseCSV(args[0])
+      : args;
   }
   const items = args.split(',');
   return items.map((i) =>

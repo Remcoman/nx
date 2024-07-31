@@ -2,7 +2,7 @@
   "name": "remote",
   "factory": "./src/generators/remote/remote#remoteGeneratorInternal",
   "schema": {
-    "$schema": "http://json-schema.org/schema",
+    "$schema": "https://json-schema.org/schema",
     "$id": "GeneratorReactRemote",
     "cli": "nx",
     "title": "Generate Module Federation Setup for React Remote App",
@@ -28,6 +28,12 @@
         "type": "string",
         "enum": ["as-provided", "derived"]
       },
+      "dynamic": {
+        "type": "boolean",
+        "description": "Should the host application use dynamic federation?",
+        "default": false,
+        "x-priority": "internal"
+      },
       "style": {
         "description": "The file extension to be used for style files.",
         "type": "string",
@@ -40,11 +46,11 @@
             { "value": "css", "label": "CSS" },
             {
               "value": "scss",
-              "label": "SASS(.scss)       [ http://sass-lang.com                     ]"
+              "label": "SASS(.scss)       [ https://sass-lang.com                     ]"
             },
             {
               "value": "less",
-              "label": "LESS              [ http://lesscss.org                       ]"
+              "label": "LESS              [ https://lesscss.org                       ]"
             },
             {
               "value": "styled-components",
@@ -93,8 +99,9 @@
       },
       "e2eTestRunner": {
         "type": "string",
-        "enum": ["cypress", "none"],
-        "description": "Test runner to use for end to end (e2e) tests.",
+        "enum": ["cypress", "playwright", "none"],
+        "description": "Test runner to use for end to end (E2E) tests.",
+        "x-prompt": "Which E2E test runner would you like to use?",
         "default": "cypress"
       },
       "tags": {
@@ -157,7 +164,7 @@
       },
       "typescriptConfiguration": {
         "type": "boolean",
-        "description": "Whether the module federation configuration and webpack configuration files should use TS.",
+        "description": "Whether the module federation configuration and webpack configuration files should use TS. When --js is used, this flag is ignored.",
         "default": true
       }
     },

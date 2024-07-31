@@ -67,18 +67,18 @@ function createNxJson(
     affected: {
       defaultBase,
     },
-    targetDefaults: {
-      build: {
-        cache: true,
-        dependsOn: ['^build'],
-      },
-      lint: {
-        cache: true,
-      },
-      e2e: {
-        cache: true,
-      },
-    },
+    targetDefaults:
+      process.env.NX_ADD_PLUGINS === 'false'
+        ? {
+            build: {
+              cache: true,
+              dependsOn: ['^build'],
+            },
+            lint: {
+              cache: true,
+            },
+          }
+        : undefined,
   };
 
   if (defaultBase === 'main') {
@@ -90,7 +90,9 @@ function createNxJson(
       production: ['default'],
       sharedGlobals: [],
     };
-    nxJson.targetDefaults.build.inputs = ['production', '^production'];
+    if (process.env.NX_ADD_PLUGINS === 'false') {
+      nxJson.targetDefaults.build.inputs = ['production', '^production'];
+    }
   }
 
   writeJson<NxJsonConfiguration>(tree, join(directory, 'nx.json'), nxJson);
@@ -102,6 +104,7 @@ function createFiles(tree: Tree, options: NormalizedSchema) {
     options.preset === Preset.AngularStandalone ||
     options.preset === Preset.ReactStandalone ||
     options.preset === Preset.VueStandalone ||
+    options.preset === Preset.NuxtStandalone ||
     options.preset === Preset.NodeStandalone ||
     options.preset === Preset.NextJsStandalone ||
     options.preset === Preset.TsStandalone
@@ -157,6 +160,7 @@ function addNpmScripts(tree: Tree, options: NormalizedSchema) {
     options.preset === Preset.AngularStandalone ||
     options.preset === Preset.ReactStandalone ||
     options.preset === Preset.VueStandalone ||
+    options.preset === Preset.NuxtStandalone ||
     options.preset === Preset.NodeStandalone ||
     options.preset === Preset.NextJsStandalone
   ) {

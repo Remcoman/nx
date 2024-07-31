@@ -11,6 +11,8 @@ import {
   updateJson,
   updateProjectConfiguration,
   updateNxJson,
+  runTasksInSerial,
+  GeneratorCallback,
 } from '@nx/devkit';
 import { installedCypressVersion } from '../../utils/cypress-version';
 
@@ -22,30 +24,58 @@ import {
 } from '../../utils/versions';
 import { CypressComponentConfigurationSchema } from './schema';
 import { addBaseCypressSetup } from '../base-setup/base-setup';
+import init from '../init/init';
 
 type NormalizeCTOptions = ReturnType<typeof normalizeOptions>;
 
-export async function componentConfigurationGenerator(
+export function componentConfigurationGenerator(
   tree: Tree,
   options: CypressComponentConfigurationSchema
 ) {
+  return componentConfigurationGeneratorInternal(tree, {
+    addPlugin: false,
+    ...options,
+  });
+}
+
+export async function componentConfigurationGeneratorInternal(
+  tree: Tree,
+  options: CypressComponentConfigurationSchema
+) {
+  const tasks: GeneratorCallback[] = [];
   const opts = normalizeOptions(options);
+
+  tasks.push(
+    await init(tree, {
+      ...opts,
+      skipFormat: true,
+    })
+  );
+
+  const nxJson = readNxJson(tree);
+  const hasPlugin = nxJson.plugins?.some((p) =>
+    typeof p === 'string'
+      ? p === '@nx/cypress/plugin'
+      : p.plugin === '@nx/cypress/plugin'
+  );
 
   const projectConfig = readProjectConfiguration(tree, opts.project);
 
-  const installDepsTask = updateDeps(tree, opts);
+  tasks.push(updateDeps(tree, opts));
 
   addProjectFiles(tree, projectConfig, opts);
-  addTargetToProject(tree, projectConfig, opts);
-  updateNxJsonConfiguration(tree);
+  if (!hasPlugin) {
+    addTargetToProject(tree, projectConfig, opts);
+  }
+  updateNxJsonConfiguration(tree, hasPlugin);
+
   updateTsConfigForComponentTesting(tree, projectConfig);
 
   if (!opts.skipFormat) {
     await formatFiles(tree);
   }
-  return () => {
-    installDepsTask();
-  };
+
+  return runTasksInSerial(...tasks);
 }
 
 function normalizeOptions(options: CypressComponentConfigurationSchema) {
@@ -57,6 +87,7 @@ function normalizeOptions(options: CypressComponentConfigurationSchema) {
   }
 
   return {
+    addPlugin: process.env.NX_ADD_PLUGINS !== 'false',
     ...options,
     directory: options.directory ?? 'cypress',
   };
@@ -117,30 +148,33 @@ function addTargetToProject(
   updateProjectConfiguration(tree, opts.project, projectConfig);
 }
 
-function updateNxJsonConfiguration(tree: Tree) {
+function updateNxJsonConfiguration(tree: Tree, hasPlugin: boolean) {
   const nxJson = readNxJson(tree);
 
-  const cacheableOperations: string[] | null =
-    nxJson.tasksRunnerOptions?.default?.options?.cacheableOperations;
-  if (cacheableOperations && !cacheableOperations.includes('component-test')) {
-    cacheableOperations.push('component-test');
+  const productionFileSet = nxJson.namedInputs?.production;
+  if (productionFileSet) {
+    nxJson.namedInputs.production = Array.from(
+      new Set([
+        ...productionFileSet,
+        '!{projectRoot}/cypress/**/*',
+        '!{projectRoot}/**/*.cy.[jt]s?(x)',
+        '!{projectRoot}/cypress.config.[jt]s',
+      ])
+    );
   }
-  nxJson.targetDefaults ??= {};
-  nxJson.targetDefaults['component-test'] ??= {};
-  nxJson.targetDefaults['component-test'].cache ??= true;
-
-  if (nxJson.namedInputs) {
-    const productionFileSet = nxJson.namedInputs?.production;
-    if (productionFileSet) {
-      nxJson.namedInputs.production = Array.from(
-        new Set([
-          ...productionFileSet,
-          '!{projectRoot}/cypress/**/*',
-          '!{projectRoot}/**/*.cy.[jt]s?(x)',
-          '!{projectRoot}/cypress.config.[jt]s',
-        ])
-      );
+  if (!hasPlugin) {
+    const cacheableOperations: string[] | null =
+      nxJson.tasksRunnerOptions?.default?.options?.cacheableOperations;
+    if (
+      cacheableOperations &&
+      !cacheableOperations.includes('component-test')
+    ) {
+      cacheableOperations.push('component-test');
     }
+    nxJson.targetDefaults ??= {};
+    nxJson.targetDefaults['component-test'] ??= {};
+    nxJson.targetDefaults['component-test'].cache ??= true;
+
     nxJson.targetDefaults['component-test'] ??= {};
     nxJson.targetDefaults['component-test'].inputs ??= [
       'default',

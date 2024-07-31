@@ -38,7 +38,7 @@ describe('preset', () => {
       linter: 'eslint',
     });
     expect(tree.exists('/apps/proj/src/main.tsx')).toBe(true);
-    expect(readProjectConfiguration(tree, 'proj').targets.serve).toBeDefined();
+    expect(tree.read('apps/proj/webpack.config.js', 'utf-8')).toMatchSnapshot();
   });
 
   it(`should create files (preset = ${Preset.VueMonorepo})`, async () => {
@@ -49,7 +49,18 @@ describe('preset', () => {
       linter: 'eslint',
     });
     expect(tree.exists('apps/proj/src/main.ts')).toBe(true);
-    expect(readProjectConfiguration(tree, 'proj').targets.serve).toBeDefined();
+    expect(tree.read('apps/proj/vite.config.ts', 'utf-8')).toMatchSnapshot();
+  });
+
+  it(`should create files (preset = ${Preset.Nuxt})`, async () => {
+    await presetGenerator(tree, {
+      name: 'proj',
+      preset: Preset.Nuxt,
+      style: 'css',
+      linter: 'eslint',
+    });
+    expect(tree.exists('apps/proj/src/app.vue')).toBe(true);
+    expect(readProjectConfiguration(tree, 'proj')).toBeDefined();
   });
 
   it(`should create files (preset = ${Preset.NextJs})`, async () => {
@@ -59,7 +70,7 @@ describe('preset', () => {
       style: 'css',
       linter: 'eslint',
     });
-    expect(tree.exists('/apps/proj/app/page.tsx')).toBe(true);
+    expect(tree.exists('/apps/proj/src/app/page.tsx')).toBe(true);
   });
 
   it(`should create files (preset = ${Preset.Express})`, async () => {
@@ -92,9 +103,7 @@ describe('preset', () => {
       bundler: 'webpack',
     });
     expect(tree.exists('webpack.config.js')).toBe(true);
-    expect(
-      readProjectConfiguration(tree, 'proj').targets.serve
-    ).toMatchSnapshot();
+    expect(tree.read('webpack.config.js', 'utf-8')).toMatchSnapshot();
   });
 
   it(`should create files (preset = ${Preset.ReactStandalone} bundler = vite)`, async () => {
@@ -106,9 +115,7 @@ describe('preset', () => {
       bundler: 'vite',
     });
     expect(tree.exists('vite.config.ts')).toBe(true);
-    expect(
-      readProjectConfiguration(tree, 'proj').targets.serve
-    ).toMatchSnapshot();
+    expect(tree.read('vite.config.ts', 'utf-8')).toMatchSnapshot();
   });
 
   it(`should create files (preset = ${Preset.VueStandalone})`, async () => {
@@ -119,8 +126,17 @@ describe('preset', () => {
       e2eTestRunner: 'cypress',
     });
     expect(tree.exists('vite.config.ts')).toBe(true);
-    expect(
-      readProjectConfiguration(tree, 'proj').targets.serve
-    ).toMatchSnapshot();
+    expect(tree.read('vite.config.ts', 'utf-8')).toMatchSnapshot();
+  });
+
+  it(`should create files (preset = ${Preset.NuxtStandalone})`, async () => {
+    await presetGenerator(tree, {
+      name: 'proj',
+      preset: Preset.NuxtStandalone,
+      style: 'css',
+      e2eTestRunner: 'cypress',
+    });
+    expect(tree.exists('nuxt.config.ts')).toBe(true);
+    expect(readProjectConfiguration(tree, 'proj')).toBeDefined();
   });
 });

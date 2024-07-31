@@ -18,6 +18,8 @@ describe('convertComponentToScam', () => {
       project: 'app1',
       skipImport: true,
       export: false,
+      standalone: false,
+      skipFormat: true,
     });
 
     // ACT
@@ -45,7 +47,7 @@ describe('convertComponentToScam', () => {
       @Component({
         selector: 'proj-example',
         templateUrl: './example.component.html',
-        styleUrls: ['./example.component.css'],
+        styleUrl: './example.component.css'
       })
       export class ExampleComponent {}
 
@@ -54,7 +56,8 @@ describe('convertComponentToScam', () => {
         declarations: [ExampleComponent],
         exports: [ExampleComponent],
       })
-      export class ExampleComponentModule {}"
+      export class ExampleComponentModule {}
+      "
     `);
   });
 
@@ -72,6 +75,8 @@ describe('convertComponentToScam', () => {
       project: 'app1',
       skipImport: true,
       export: false,
+      standalone: false,
+      skipFormat: true,
     });
 
     // ACT
@@ -102,7 +107,8 @@ describe('convertComponentToScam', () => {
         declarations: [ExampleComponent],
         exports: [ExampleComponent],
       })
-      export class ExampleComponentModule {}"
+      export class ExampleComponentModule {}
+      "
     `);
   });
 
@@ -121,6 +127,8 @@ describe('convertComponentToScam', () => {
       skipImport: true,
       export: false,
       flat: true,
+      standalone: false,
+      skipFormat: true,
     });
 
     // ACT
@@ -149,7 +157,7 @@ describe('convertComponentToScam', () => {
       @Component({
         selector: 'proj-example',
         templateUrl: './example.component.html',
-        styleUrls: ['./example.component.css'],
+        styleUrl: './example.component.css'
       })
       export class ExampleComponent {}
 
@@ -158,7 +166,8 @@ describe('convertComponentToScam', () => {
         declarations: [ExampleComponent],
         exports: [ExampleComponent],
       })
-      export class ExampleComponentModule {}"
+      export class ExampleComponentModule {}
+      "
     `);
   });
 
@@ -177,6 +186,8 @@ describe('convertComponentToScam', () => {
       skipImport: true,
       export: false,
       flat: true,
+      standalone: false,
+      skipFormat: true,
     });
 
     // ACT
@@ -208,7 +219,8 @@ describe('convertComponentToScam', () => {
         declarations: [ExampleComponent],
         exports: [ExampleComponent],
       })
-      export class ExampleComponentModule {}"
+      export class ExampleComponentModule {}
+      "
     `);
   });
 
@@ -228,6 +240,8 @@ describe('convertComponentToScam', () => {
       export: false,
       flat: true,
       type: 'random',
+      standalone: false,
+      skipFormat: true,
     });
 
     // ACT
@@ -257,7 +271,7 @@ describe('convertComponentToScam', () => {
       @Component({
         selector: 'proj-example',
         templateUrl: './example.random.html',
-        styleUrls: ['./example.random.css'],
+        styleUrl: './example.random.css'
       })
       export class ExampleRandom {}
 
@@ -266,7 +280,8 @@ describe('convertComponentToScam', () => {
         declarations: [ExampleRandom],
         exports: [ExampleRandom],
       })
-      export class ExampleRandomModule {}"
+      export class ExampleRandomModule {}
+      "
     `);
   });
 
@@ -286,6 +301,8 @@ describe('convertComponentToScam', () => {
       export: false,
       flat: true,
       type: 'random',
+      standalone: false,
+      skipFormat: true,
     });
 
     // ACT
@@ -318,7 +335,8 @@ describe('convertComponentToScam', () => {
         declarations: [ExampleRandom],
         exports: [ExampleRandom],
       })
-      export class ExampleRandomModule {}"
+      export class ExampleRandomModule {}
+      "
     `);
   });
 
@@ -338,6 +356,8 @@ describe('convertComponentToScam', () => {
       export: false,
       flat: false,
       path: 'apps/app1/src/app/random',
+      standalone: false,
+      skipFormat: true,
     });
 
     // ACT
@@ -366,7 +386,7 @@ describe('convertComponentToScam', () => {
       @Component({
         selector: 'proj-example',
         templateUrl: './example.component.html',
-        styleUrls: ['./example.component.css'],
+        styleUrl: './example.component.css'
       })
       export class ExampleComponent {}
 
@@ -375,7 +395,8 @@ describe('convertComponentToScam', () => {
         declarations: [ExampleComponent],
         exports: [ExampleComponent],
       })
-      export class ExampleComponentModule {}"
+      export class ExampleComponentModule {}
+      "
     `);
   });
 
@@ -395,6 +416,8 @@ describe('convertComponentToScam', () => {
       export: false,
       flat: true,
       path: 'apps/app1/src/app/random',
+      standalone: false,
+      skipFormat: true,
     });
 
     // ACT
@@ -423,7 +446,7 @@ describe('convertComponentToScam', () => {
       @Component({
         selector: 'proj-example',
         templateUrl: './example.component.html',
-        styleUrls: ['./example.component.css'],
+        styleUrl: './example.component.css'
       })
       export class ExampleComponent {}
 
@@ -432,7 +455,8 @@ describe('convertComponentToScam', () => {
         declarations: [ExampleComponent],
         exports: [ExampleComponent],
       })
-      export class ExampleComponentModule {}"
+      export class ExampleComponentModule {}
+      "
     `);
   });
 });

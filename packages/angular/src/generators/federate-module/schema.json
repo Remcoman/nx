@@ -1,5 +1,5 @@
 {
-  "$schema": "http://json-schema.org/schema",
+  "$schema": "https://json-schema.org/schema",
   "cli": "nx",
   "$id": "NxReactFederateModule",
   "title": "Federate Module",
@@ -67,9 +67,9 @@
       "default": "cypress"
     },
     "standalone": {
-      "description": "Whether to generate the remote application with standalone components if it needs to be created. _Note: This is only supported in Angular versions >= 14.1.0_",
+      "description": "Whether to generate the remote application with standalone components if it needs to be created.",
       "type": "boolean",
-      "default": false
+      "default": true
     },
     "host": {
       "type": "string",

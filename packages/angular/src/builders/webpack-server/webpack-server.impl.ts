@@ -1,9 +1,12 @@
-import { joinPathFragments } from '@nx/devkit';
+import {
+  joinPathFragments,
+  normalizePath,
+  targetToTargetString,
+} from '@nx/devkit';
 import { existsSync } from 'fs';
+import { relative } from 'path';
 import { Observable, from } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
-import { lt } from 'semver';
-import { getInstalledAngularVersionInfo } from '../../executors/utilities/angular-version-utils';
 import { createTmpTsConfigForBuildableLibs } from '../utilities/buildable-libs';
 import { mergeCustomWebpackConfig } from '../utilities/webpack';
 import { Schema } from './schema';
@@ -95,23 +98,19 @@ export function executeWebpackServerBuilder(
 ): Observable<import('@angular-devkit/build-angular').ServerBuilderOutput> {
   validateOptions(options);
 
-  const installedAngularVersionInfo = getInstalledAngularVersionInfo();
-  // default bundleDependencies to true if supported by Angular version
-  if (
-    lt(installedAngularVersionInfo.version, '15.0.0') &&
-    options.bundleDependencies === undefined
-  ) {
-    options.bundleDependencies = true;
-  }
-
   options.buildLibsFromSource ??= true;
+
+  process.env.NX_BUILD_LIBS_FROM_SOURCE = `${options.buildLibsFromSource}`;
+  process.env.NX_BUILD_TARGET = targetToTargetString({ ...context.target });
 
   if (!options.buildLibsFromSource) {
     const { tsConfigPath } = createTmpTsConfigForBuildableLibs(
       options.tsConfig,
       context
     );
-    options.tsConfig = tsConfigPath;
+    options.tsConfig = normalizePath(
+      relative(context.workspaceRoot, tsConfigPath)
+    );
   }
 
   return buildServerApp(options, context);

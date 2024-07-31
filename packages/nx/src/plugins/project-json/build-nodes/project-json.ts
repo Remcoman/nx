@@ -5,17 +5,18 @@ import { toProjectName } from '../../../config/workspaces';
 import { readJsonFile } from '../../../utils/fileutils';
 import { NxPluginV2 } from '../../../utils/nx-plugin';
 
-export const CreateProjectJsonProjectsPlugin: NxPluginV2 = {
-  name: 'nx-core-build-project-json-nodes',
+export const ProjectJsonProjectsPlugin: NxPluginV2 = {
+  name: 'nx/core/project-json',
   createNodes: [
     '{project.json,**/project.json}',
-    (file, _, context) => {
-      const root = context.workspaceRoot;
-      const json = readJsonFile<ProjectConfiguration>(join(root, file));
+    (file, _, { workspaceRoot }) => {
+      const json = readJsonFile<ProjectConfiguration>(
+        join(workspaceRoot, file)
+      );
       const project = buildProjectFromProjectJson(json, file);
       return {
         projects: {
-          [project.name]: project,
+          [project.root]: project,
         },
       };
     },

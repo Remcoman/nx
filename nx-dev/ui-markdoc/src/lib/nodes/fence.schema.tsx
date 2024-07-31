@@ -1,7 +1,7 @@
 import { Schema, Tag } from '@markdoc/markdoc';
 
 export const fence: Schema = {
-  render: 'Fence',
+  render: 'FenceWrapper',
   attributes: {
     content: { type: 'String', render: false, required: true },
     language: { type: 'String' },
@@ -11,6 +11,7 @@ export const fence: Schema = {
     command: { type: 'String', default: '' },
     path: { type: 'String', default: '~/workspace' },
     process: { type: 'Boolean', render: false, default: true },
+    skipRescope: { type: 'Boolean', default: false },
     enableCopy: { type: 'Boolean', default: true },
   },
   transform(node, config) {
@@ -18,6 +19,6 @@ export const fence: Schema = {
     const children = node.children.length
       ? node.transformChildren(config)
       : [node.attributes['content']];
-    return new Tag('Fence', attributes, children);
+    return new Tag('FenceWrapper', attributes, children);
   },
 };

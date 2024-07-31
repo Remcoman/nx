@@ -25,6 +25,7 @@ describe('ngrx', () => {
     minimal: true,
     parent: 'myapp/src/app/app.module.ts',
     name: 'users',
+    skipFormat: true,
   };
 
   const defaultStandaloneOptions: NgRxGeneratorOptions = {
@@ -32,6 +33,7 @@ describe('ngrx', () => {
     minimal: true,
     parent: 'my-app/src/app/app.config.ts',
     name: 'users',
+    skipFormat: true,
   };
 
   const defaultModuleOptions: NgRxGeneratorOptions = {
@@ -39,6 +41,7 @@ describe('ngrx', () => {
     minimal: true,
     module: 'myapp/src/app/app.module.ts',
     name: 'users',
+    skipFormat: true,
   };
 
   const expectFileToExist = (file: string) =>
@@ -417,9 +420,27 @@ describe('ngrx', () => {
     it('should format files', async () => {
       jest.spyOn(devkit, 'formatFiles');
 
-      await ngrxGenerator(tree, defaultOptions);
+      await ngrxGenerator(tree, { ...defaultOptions, skipFormat: false });
 
       expect(devkit.formatFiles).toHaveBeenCalled();
+      expect(
+        tree.read('myapp/src/app/app.module.ts', 'utf-8')
+      ).toMatchSnapshot();
+      expect(
+        tree.read('myapp/src/app/+state/users.actions.ts', 'utf-8')
+      ).toMatchSnapshot();
+      expect(
+        tree.read('myapp/src/app/+state/users.effects.ts', 'utf-8')
+      ).toMatchSnapshot();
+      expect(
+        tree.read('myapp/src/app/+state/users.models.ts', 'utf-8')
+      ).toMatchSnapshot();
+      expect(
+        tree.read('myapp/src/app/+state/users.reducer.ts', 'utf-8')
+      ).toMatchSnapshot();
+      expect(
+        tree.read('myapp/src/app/+state/users.selectors.ts', 'utf-8')
+      ).toMatchSnapshot();
     });
 
     it('should not format files when skipFormat is true', async () => {
@@ -494,6 +515,7 @@ describe('ngrx', () => {
         name: 'my-app',
         standalone: true,
         routing: true,
+        skipFormat: true,
       });
       tree.write(
         'my-app/src/app/app.component.html',
@@ -502,8 +524,10 @@ describe('ngrx', () => {
       tree.write(
         'my-app/src/app/app.routes.ts',
         `import { Routes } from '@angular/router';
-        import { NxWelcomeComponent } from './nx-welcome.component'; 
-      export const appRoutes: Routes = [{ path: '', component: NxWelcomeComponent }];`
+import { NxWelcomeComponent } from './nx-welcome.component';
+
+export const appRoutes: Routes = [{ path: '', component: NxWelcomeComponent }];
+`
       );
     });
 
@@ -575,8 +599,10 @@ describe('ngrx', () => {
       tree.write(
         'my-app/src/app/app.routes.ts',
         `import { Routes } from '@angular/router';
-        import { NxWelcomeComponent } from './nx-welcome.component'; 
-      export const appRoutes: Routes = [{ path: 'home', component: NxWelcomeComponent }];`
+import { NxWelcomeComponent } from './nx-welcome.component';
+
+export const appRoutes: Routes = [{ path: 'home', component: NxWelcomeComponent }];
+`
       );
 
       await ngrxGenerator(tree, {
@@ -633,178 +659,61 @@ describe('ngrx', () => {
     });
   });
 
-  describe('angular v14 support', () => {
+  describe('angular v15 support', () => {
     beforeEach(async () => {
       jest.clearAllMocks();
       tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
-      await generateTestApplication(tree, { name: 'myapp' });
+      await generateTestApplication(tree, {
+        name: 'myapp',
+        standalone: false,
+        skipFormat: true,
+      });
       devkit.updateJson(tree, 'package.json', (json) => ({
         ...json,
         dependencies: {
           ...json.dependencies,
-          '@angular/core': '14.0.0',
+          '@angular/core': '15.0.0',
         },
       }));
     });
 
-    it('should install the ngrx 14 packages', async () => {
+    it('should install the ngrx 15 packages', async () => {
       await ngrxGenerator(tree, defaultOptions);
 
       const packageJson = devkit.readJson(tree, 'package.json');
       expect(packageJson.dependencies['@ngrx/store']).toEqual(
-        backwardCompatibleVersions.angularV14.ngrxVersion
+        backwardCompatibleVersions.angularV15.ngrxVersion
       );
       expect(packageJson.dependencies['@ngrx/effects']).toEqual(
-        backwardCompatibleVersions.angularV14.ngrxVersion
+        backwardCompatibleVersions.angularV15.ngrxVersion
       );
       expect(packageJson.dependencies['@ngrx/entity']).toEqual(
-        backwardCompatibleVersions.angularV14.ngrxVersion
+        backwardCompatibleVersions.angularV15.ngrxVersion
       );
       expect(packageJson.dependencies['@ngrx/router-store']).toEqual(
-        backwardCompatibleVersions.angularV14.ngrxVersion
+        backwardCompatibleVersions.angularV15.ngrxVersion
       );
       expect(packageJson.dependencies['@ngrx/component-store']).toEqual(
-        backwardCompatibleVersions.angularV14.ngrxVersion
+        backwardCompatibleVersions.angularV15.ngrxVersion
       );
       expect(packageJson.devDependencies['@ngrx/schematics']).toEqual(
-        backwardCompatibleVersions.angularV14.ngrxVersion
+        backwardCompatibleVersions.angularV15.ngrxVersion
       );
       expect(packageJson.devDependencies['@ngrx/store-devtools']).toEqual(
-        backwardCompatibleVersions.angularV14.ngrxVersion
+        backwardCompatibleVersions.angularV15.ngrxVersion
       );
       expect(packageJson.devDependencies['jasmine-marbles']).toBeDefined();
-    });
-
-    it('should generate the ngrx effects with no usage of "inject"', async () => {
-      await ngrxGenerator(tree, defaultOptions);
-
-      expect(
-        tree.read('myapp/src/app/+state/users.effects.ts', 'utf-8')
-      ).toMatchSnapshot();
-    });
-
-    it('should generate the ngrx effects using "inject" for versions >= 14.1.0', async () => {
-      devkit.updateJson(tree, 'package.json', (json) => ({
-        ...json,
-        dependencies: {
-          ...json.dependencies,
-          '@angular/core': '14.1.0',
-        },
-      }));
-
-      await ngrxGenerator(tree, defaultOptions);
-
-      expect(
-        tree.read('myapp/src/app/+state/users.effects.ts', 'utf-8')
-      ).toMatchSnapshot();
-    });
-
-    it('should generate the ngrx facade with no usage of "inject"', async () => {
-      await ngrxGenerator(tree, { ...defaultOptions, facade: true });
-
-      expect(
-        tree.read('myapp/src/app/+state/users.facade.ts', 'utf-8')
-      ).toMatchSnapshot();
-    });
-
-    it('should generate the ngrx facade using "inject" for versions >= 14.1.0', async () => {
-      devkit.updateJson(tree, 'package.json', (json) => ({
-        ...json,
-        dependencies: {
-          ...json.dependencies,
-          '@angular/core': '14.1.0',
-        },
-      }));
-
-      await ngrxGenerator(tree, { ...defaultOptions, facade: true });
-
-      expect(
-        tree.read('myapp/src/app/+state/users.facade.ts', 'utf-8')
-      ).toMatchSnapshot();
-    });
-
-    it('should throw when Angular version < 14.1 and NgRx < 15 but path to routes file is provided', async () => {
-      const parentPath = 'myapp/src/app/app.routes.ts';
-      tree.write(
-        parentPath,
-        `import { Routes } from '@angular/router';
-        import { NxWelcomeComponent } from './nx-welcome.component'; 
-        export const appRoutes: Routes = [{ path: '', component: NxWelcomeComponent }];`
-      );
-
-      devkit.updateJson(tree, 'package.json', (json) => ({
-        ...json,
-        dependencies: {
-          ...json.dependencies,
-          '@angular/core': '14.1.0',
-          '@ngrx/store': '14.1.0',
-        },
-      }));
-
-      // ACT & ASSERT
-      await expect(
-        ngrxGenerator(tree, {
-          ...defaultStandaloneOptions,
-          parent: parentPath,
-        })
-      ).rejects.toThrowError(
-        `The provided parent path "${parentPath}" does not contain an "NgModule".`
-      );
-    });
-
-    it('should throw when Angular version < 15 and NgRx is not currently installed but path to routes file is provided', async () => {
-      const parentPath = 'myapp/src/app/app.routes.ts';
-      tree.write(
-        parentPath,
-        `import { Routes } from '@angular/router';
-        import { NxWelcomeComponent } from './nx-welcome.component'; 
-        export const appRoutes: Routes = [{ path: '', component: NxWelcomeComponent }];`
-      );
-
-      devkit.updateJson(tree, 'package.json', (json) => ({
-        ...json,
-        dependencies: {
-          ...json.dependencies,
-          '@angular/core': '14.2.0',
-        },
-      }));
-
-      // ACT & ASSERT
-      await expect(
-        ngrxGenerator(tree, {
-          ...defaultStandaloneOptions,
-          parent: parentPath,
-        })
-      ).rejects.toThrowError(
-        `The provided parent path "${parentPath}" does not contain an "NgModule".`
-      );
-    });
-
-    it('should throw when the provided parent does not have an NgModule', async () => {
-      const parentPath = 'myapp/src/app/app.routes.ts';
-      tree.write(
-        parentPath,
-        `import { Routes } from '@angular/router';
-        import { NxWelcomeComponent } from './nx-welcome.component'; 
-        export const appRoutes: Routes = [{ path: '', component: NxWelcomeComponent }];`
-      );
-
-      // ACT & ASSERT
-      await expect(
-        ngrxGenerator(tree, {
-          ...defaultStandaloneOptions,
-          parent: parentPath,
-        })
-      ).rejects.toThrowError(
-        `The provided parent path "${parentPath}" does not contain an "NgModule".`
-      );
     });
   });
 
   describe('rxjs v6 support', () => {
     beforeEach(async () => {
       tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
-      await generateTestApplication(tree, { name: 'myapp' });
+      await generateTestApplication(tree, {
+        name: 'myapp',
+        standalone: false,
+        skipFormat: true,
+      });
       devkit.updateJson(tree, 'package.json', (json) => ({
         ...json,
         dependencies: {

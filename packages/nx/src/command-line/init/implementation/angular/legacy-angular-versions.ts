@@ -11,14 +11,17 @@ import {
   resolvePackageVersionUsingInstallation,
   resolvePackageVersionUsingRegistry,
 } from '../../../../utils/package-manager';
-import { askAboutNxCloud, initCloud, printFinalMessage } from '../utils';
+import { initCloud, printFinalMessage } from '../utils';
 import type { Options } from './types';
+import { connectExistingRepoToNxCloudPrompt } from '../../../connect/connect-to-nx-cloud';
 
 // map of Angular major versions to Nx versions to use for legacy `nx init` migrations,
 // key is major Angular version and value is Nx version to use
-const nxAngularLegacyVersionMap: Record<number, string> = {};
+const nxAngularLegacyVersionMap: Record<number, string> = {
+  14: '~17.0.0',
+};
 // min major angular version supported in latest Nx
-const minMajorAngularVersionSupported = 14;
+const minMajorAngularVersionSupported = 15;
 // version when the Nx CLI changed from @nrwl/tao & @nrwl/cli to nx
 const versionWithConsolidatedPackages = '13.9.0';
 // version when packages were rescoped from @nrwl/* to @nx/*
@@ -84,7 +87,9 @@ export async function getLegacyMigrationFunctionIfApplicable(
     output.log({ title: '🐳 Nx initialization' });
     const useNxCloud =
       options.nxCloud ??
-      (options.interactive ? await askAboutNxCloud() : false);
+      (options.interactive
+        ? await connectExistingRepoToNxCloudPrompt()
+        : false);
 
     output.log({ title: '📦 Installing dependencies' });
     const pmc = getPackageManagerCommand();
@@ -96,7 +101,6 @@ export async function getLegacyMigrationFunctionIfApplicable(
         pkgVersion,
         unscopedPkgName,
       },
-      useNxCloud,
       pmc
     );
 
@@ -125,7 +129,6 @@ async function installDependencies(
     pkgVersion: string;
     unscopedPkgName: string;
   },
-  useNxCloud: boolean,
   pmc: PackageManagerCommands
 ): Promise<void> {
   const json = readJsonFile(join(repoRoot, 'package.json'));

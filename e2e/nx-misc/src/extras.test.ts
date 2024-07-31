@@ -6,7 +6,6 @@ import {
   newProject,
   readJson,
   runCLI,
-  setMaxWorkers,
   uniq,
   updateFile,
   readFile,
@@ -15,14 +14,13 @@ import {
 import { join } from 'path';
 
 describe('Extra Nx Misc Tests', () => {
-  beforeAll(() => newProject());
+  beforeAll(() => newProject({ packages: ['@nx/web', '@nx/js', '@nx/react'] }));
   afterAll(() => cleanupProject());
 
   describe('Output Style', () => {
     it('should stream output', async () => {
       const myapp = 'abcdefghijklmon';
       runCLI(`generate @nx/web:app ${myapp}`);
-      setMaxWorkers(join('apps', myapp, 'project.json'));
 
       updateJson(join('apps', myapp, 'project.json'), (c) => {
         c.targets['inner'] = {
@@ -214,6 +212,7 @@ describe('Extra Nx Misc Tests', () => {
 
     it('run command should not break if output property is missing in options and arguments', async () => {
       updateJson(join('libs', mylib, 'project.json'), (config) => {
+        config.targets.lint ??= {};
         config.targets.lint.outputs = ['{options.outputFile}'];
         return config;
       });

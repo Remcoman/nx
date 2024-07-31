@@ -50,6 +50,28 @@
     }
   },
   "packageJsonUpdates": {
+    "17.2.0-beta.2": {
+      "version": "17.2.0-beta.2",
+      "packages": {
+        "vite": {
+          "version": "^5.0.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "17.1.0-beta.4": {
+      "version": "17.1.0-beta.4",
+      "packages": {
+        "@storybook/testing-library": {
+          "version": "^0.2.2",
+          "alwaysAddToPackageJson": false
+        },
+        "@storybook/jest": {
+          "version": "^0.2.3",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
     "17.1.0": {
       "version": "17.1.0-beta.3",
       "packages": {

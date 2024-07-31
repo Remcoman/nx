@@ -1,6 +1,6 @@
 import { Footer, Header } from '@nx/nx-dev/ui-common';
 import {
-  ConfHealthAndSafety,
+  CodeOfConduct,
   ConfLocation,
   ConfScheduleShort,
   ConfSpeakers,
@@ -333,7 +333,7 @@ export default function ConfPage(): JSX.Element {
               </h2>
             </div>
           </div>
-          <ConfHealthAndSafety />
+          <CodeOfConduct />
           {/*SPONSORS
         <div className="mx-auto max-w-screen-lg px-5 py-5 xl:max-w-screen-xl">
           <div className="mt-24">
@@ -491,18 +491,6 @@ export default function ConfPage(): JSX.Element {
         </div>
       </main>
       <Footer />
-      <Script
-        id="twitter-campain-pixelcode"
-        strategy="afterInteractive"
-        dangerouslySetInnerHTML={{
-          __html: `
-        !function(e,t,n,s,u,a){e.twq||(s=e.twq=function(){s.exe?s.exe.apply(s,arguments):s.queue.push(arguments);
-        },s.version='1.1',s.queue=[],u=t.createElement(n),u.async=!0,u.src='https://static.ads-twitter.com/uwt.js',
-        a=t.getElementsByTagName(n)[0],a.parentNode.insertBefore(u,a))}(window,document,'script');
-        twq('config','obtp4'); 
-        `,
-        }}
-      />
     </>
   );
 }

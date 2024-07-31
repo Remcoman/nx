@@ -1,5 +1,11 @@
 import { installedCypressVersion } from '@nx/cypress/src/utils/cypress-version';
-import { logger, readJson, Tree } from '@nx/devkit';
+import {
+  logger,
+  readJson,
+  readProjectConfiguration,
+  Tree,
+  updateProjectConfiguration,
+} from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { createApp, createLib } from '../../utils/testing-generators';
 import { componentGenerator } from './component';
@@ -133,6 +139,22 @@ describe('component', () => {
         name: 'hello',
         style: 'css',
         project: 'my-app',
+        export: true,
+      });
+
+      const indexContent = appTree.read('my-lib/src/index.ts', 'utf-8');
+
+      expect(indexContent).not.toMatch(/lib\/hello/);
+    });
+
+    it('should work for projects without sourceRoot', async () => {
+      const projectConfig = readProjectConfiguration(appTree, 'my-lib');
+      delete projectConfig.sourceRoot;
+      updateProjectConfiguration(appTree, 'my-lib', projectConfig);
+
+      await componentGenerator(appTree, {
+        name: 'my-lib/src/lib/hello',
+        style: 'css',
         export: true,
       });
 
@@ -346,6 +368,17 @@ describe('component', () => {
       });
 
       expect(appTree.exists('/my-lib/src/lib/foo/hello-world/hello-world.tsx'));
+    });
+
+    it('should create directory when the path is provided as the component name', async () => {
+      await componentGenerator(appTree, {
+        name: `my-lib/src/btn/btn`,
+        project: projectName,
+        style: 'css',
+        nameAndDirectoryFormat: 'as-provided',
+      });
+
+      expect(appTree.exists('my-lib/src/btn/btn.tsx')).toBeTruthy();
     });
   });
 

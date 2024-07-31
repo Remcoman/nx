@@ -16,21 +16,26 @@ export function Header(): JSX.Element {
       href: '/getting-started/intro',
     },
     {
-      name: 'Concepts',
-      description: 'What to know more about how Nx is working?',
-      href: '/concepts',
+      name: 'Nx on CI',
+      description: 'Learn how to efficiently use Nx on CI',
+      href: '/ci/intro/ci-with-nx',
+    },
+    // {
+    //   name: 'Concepts',
+    //   description: 'What to know more about how Nx is working?',
+    //   href: '/concepts',
+    // },
+    {
+      name: 'Features',
+      description:
+        'Learn the features of Nx with in depth guides and explainers.',
+      href: '/features',
     },
     {
-      name: 'Core Features',
+      name: 'Nx Replay',
       description:
-        'Learn the core features of Nx with in depth guides and explainers.',
-      href: '/core-features',
-    },
-    {
-      name: 'Distributed cache & task execution',
-      description:
-        'Executes tasks remotely on different agents in parallel. Enable remote cache in one command.',
-      href: '/core-features/distribute-task-execution',
+        'Built-in local and remote caching to speed up your tasks and save you time and money.',
+      href: '/features/cache-task-results',
     },
     {
       name: 'Recipes',
@@ -38,21 +43,21 @@ export function Header(): JSX.Element {
       href: '/recipes',
     },
     {
+      name: 'Nx Agents',
+      description:
+        'Executes tasks remotely on different agents in parallel. Enable remote cache in one command.',
+      href: '/ci/features/distribute-task-execution',
+    },
+    {
       name: 'Nx Console',
       description:
         'The official VSCode & JetBrains plugin bringing Nx to your editor.',
-      href: '/core-features/integrate-with-editors#vscode',
+      href: '/features/integrate-with-editors#vscode',
     },
     {
-      name: 'API',
-      description: 'API docs of the Nx team maintained plugins.',
-      href: '/nx-api',
-    },
-    {
-      name: 'Nx Cloud',
-      description:
-        'Learn everything about remote cache and distributed tasks configuration.',
-      href: '/nx-cloud/intro/ci-with-nx',
+      name: 'Set Up CI',
+      description: 'Configure Nx for your CI provider',
+      href: '/ci/recipes/set-up',
     },
   ];
   const flyoutMobileMenu = [
@@ -68,13 +73,13 @@ export function Header(): JSX.Element {
     },
     {
       name: 'Community',
-      description: "Check how to reach out and be part of Nx' community.",
+      description: 'Check how to reach out and be part of the Nx community.',
       href: '/community',
     },
     {
-      name: 'Nx Conf',
-      description: 'Be part of the next Nx conference!',
-      href: '/conf',
+      name: 'Launch Nx',
+      description: 'A week of exciting announcements about Nx and Nx Cloud!',
+      href: '/launch-nx',
     },
     {
       name: 'Nx Enterprise',
@@ -199,14 +204,14 @@ export function Header(): JSX.Element {
               Plugins registry
             </Link>
             <Link
-              href="/conf"
-              title="Check Nx conference"
+              href="/launch-nx"
+              title="Launch Nx"
               className="relative hidden px-3 py-2 font-medium leading-tight hover:text-blue-500 dark:text-slate-200 dark:hover:text-sky-500 md:inline-flex"
             >
               {/*<span className="absolute top-0 right-0 -mt-1 -mr-1 flex h-3 w-3">*/}
               {/*  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-blue-500 opacity-75 dark:bg-sky-500" />*/}
               {/*  <span className="relative inline-flex h-3 w-3 rounded-full bg-blue-500 dark:bg-sky-500" />*/}
-              {/*</span>*/}Nx Conf
+              {/*</span>*/}Launch Nx
             </Link>
           </nav>
         </div>

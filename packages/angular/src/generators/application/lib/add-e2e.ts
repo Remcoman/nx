@@ -1,3 +1,4 @@
+import { configurationGenerator } from '@nx/cypress';
 import type { Tree } from '@nx/devkit';
 import {
   addDependenciesToPackageJson,
@@ -9,8 +10,8 @@ import {
   updateProjectConfiguration,
 } from '@nx/devkit';
 import { nxVersion } from '../../../utils/versions';
+import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
 import type { NormalizedSchema } from './normalized-schema';
-import { configurationGenerator } from '@nx/cypress';
 
 export async function addE2e(tree: Tree, options: NormalizedSchema) {
   if (options.e2eTestRunner === 'cypress') {
@@ -31,7 +32,9 @@ export async function addE2e(tree: Tree, options: NormalizedSchema) {
       skipPackageJson: options.skipPackageJson,
       skipFormat: true,
       devServerTarget: `${options.name}:serve:development`,
+      baseUrl: 'http://localhost:4200',
       rootProject: options.rootProject,
+      addPlugin: options.addPlugin,
     });
   } else if (options.e2eTestRunner === 'playwright') {
     const { configurationGenerator: playwrightConfigurationGenerator } =
@@ -59,6 +62,7 @@ export async function addE2e(tree: Tree, options: NormalizedSchema) {
       }`,
       webServerAddress: `http://localhost:${options.port ?? 4200}`,
       rootProject: options.rootProject,
+      addPlugin: options.addPlugin,
     });
   }
 }
@@ -70,12 +74,19 @@ function addFileServerTarget(
 ) {
   addDependenciesToPackageJson(tree, {}, { '@nx/web': nxVersion });
 
+  const { major: angularMajorVersion } = getInstalledAngularVersionInfo(tree);
+  const isUsingApplicationBuilder =
+    angularMajorVersion >= 17 && options.bundler === 'esbuild';
+
   const projectConfig = readProjectConfiguration(tree, options.name);
   projectConfig.targets[targetName] = {
     executor: '@nx/web:file-server',
     options: {
       buildTarget: `${options.name}:build`,
       port: options.port,
+      staticFilePath: isUsingApplicationBuilder
+        ? joinPathFragments(options.outputPath, 'browser')
+        : undefined,
     },
   };
   updateProjectConfiguration(tree, options.name, projectConfig);

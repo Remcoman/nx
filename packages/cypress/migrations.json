@@ -82,6 +82,24 @@
           "alwaysAddToPackageJson": false
         }
       }
+    },
+    "17.2.0-beta.2": {
+      "version": "17.2.0-beta.2",
+      "packages": {
+        "vite": {
+          "version": "^5.0.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "17.3.0": {
+      "version": "17.3.0-beta.3",
+      "packages": {
+        "@types/node": {
+          "version": "18.16.9",
+          "alwaysAddToPackageJson": false
+        }
+      }
     }
   }
 }

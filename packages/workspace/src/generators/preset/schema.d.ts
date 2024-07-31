@@ -12,8 +12,10 @@ export interface Schema {
   bundler?: 'vite' | 'webpack' | 'rspack' | 'esbuild';
   docker?: boolean;
   nextAppDir?: boolean;
+  nextSrcDir?: boolean;
   routing?: boolean;
   standaloneApi?: boolean;
   e2eTestRunner?: 'cypress' | 'playwright' | 'jest' | 'detox' | 'none';
   js?: boolean;
+  ssr?: boolean;
 }

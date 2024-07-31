@@ -36,11 +36,11 @@ module.exports = function (api: any, options: NxWebBabelPresetOptions = {}) {
 
   // Determine settings  for `@babel//babel-plugin-transform-class-properties`,
   // so that we can sync the `loose` option with `@babel/preset-env`.
-  // TODO(v18): Remove classProperties since it's no longer needed, now that the class props transform is in preset-env.
+  // TODO(v19): Remove classProperties since it's no longer needed, now that the class props transform is in preset-env.
   const loose = options.classProperties?.loose ?? options.loose ?? true;
   if (options.classProperties) {
     logger.warn(
-      `Use =\`loose\` option instead of \`classProperties.loose\`. The \`classProperties\` option will be removed in Nx 18`
+      `Use =\`loose\` option instead of \`classProperties.loose\`. The \`classProperties\` option will be removed in Nx 19`
     );
   }
 
@@ -52,7 +52,7 @@ module.exports = function (api: any, options: NxWebBabelPresetOptions = {}) {
         // For Jest tests, NODE_ENV is set as 'test' and we only want to set target as Node.
         // All other options will fail in Jest since Node does not support some ES features
         // such as import syntax.
-        isTest || process.env.NODE_ENV === 'test'
+        isTest || process.env.NODE_ENV === 'test' || process.env.JEST_WORKER_ID
           ? { targets: { node: 'current' }, loose: true }
           : {
               // Allow importing core-js in entrypoint and use browserslist to select polyfills.

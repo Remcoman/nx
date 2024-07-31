@@ -32,13 +32,13 @@
         "description": "The name of the project.",
         "$default": { "$source": "projectName" },
         "x-dropdown": "projects",
-        "x-deprecated": "Provide the `directory` option instead and use the `as-provided` format. The project will be determined from the directory provided. It will be removed in Nx v18."
+        "x-deprecated": "Provide the `directory` option instead and use the `as-provided` format. The project will be determined from the directory provided. It will be removed in Nx v19."
       },
       "flat": {
         "type": "boolean",
         "default": true,
         "description": "When true (the default) creates files at the top level of the project.",
-        "x-deprecated": "Provide the `directory` option instead and use the `as-provided` format. It will be removed in Nx v18."
+        "x-deprecated": "Provide the `directory` option instead and use the `as-provided` format. It will be removed in Nx v19."
       },
       "skipTests": {
         "type": "boolean",
@@ -51,9 +51,9 @@
         "description": "Do not import this pipe into the owning NgModule."
       },
       "standalone": {
-        "description": "Whether the generated pipe is standalone. _Note: This is only supported in Angular versions >= 14.1.0_.",
+        "description": "Whether the generated pipe is standalone.",
         "type": "boolean",
-        "default": false
+        "default": true
       },
       "module": {
         "type": "string",

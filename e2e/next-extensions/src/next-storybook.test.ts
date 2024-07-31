@@ -1,39 +1,36 @@
 import {
   checkFilesExist,
   cleanupProject,
-  getPackageManagerCommand,
   newProject,
   runCLI,
-  runCommand,
   uniq,
-  updateJson,
 } from '@nx/e2e/utils';
 
-describe('Next.js Storybook', () => {
-  let proj: string;
-
-  beforeAll(() => (proj = newProject({ name: 'proj', packageManager: 'npm' })));
+// TODO(katerina): Enable some time?
+// This test fails because of sharp. In this PR I have included all related links to the issue.
+xdescribe('Next.js Storybook', () => {
+  const appName = uniq('app');
+  beforeAll(() => {
+    newProject({
+      name: 'proj',
+      packageManager: 'npm',
+      packages: ['@nx/next'],
+    });
+    runCLI(
+      `generate @nx/next:app ${appName} --e2eTestRunner=none --project-name-and-root-format=as-provided --no-interactive`
+    );
+    runCLI(
+      `generate @nx/next:component Foo --directory=${appName}/components/foo/Foo.tsx --no-interactive`
+    );
+  });
 
   afterAll(() => cleanupProject());
 
-  // TODO (@mandarini): Re-enable this test
-  xit('should run a Next.js based Storybook setup', async () => {
-    const appName = uniq('app');
-
-    runCLI(`generate @nx/next:app ${appName} --no-interactive`);
+  it('should run a Next.js based Storybook setup', async () => {
     runCLI(
-      `generate @nx/next:component Foo --project=${appName} --no-interactive`
+      `generate @nx/next:storybook-configuration ${appName} --generateStories --no-interactive`
     );
-
-    // Currently due to auto-installing peer deps in pnpm, the generator can fail while installing deps with unmet peet deps.
-    runCLI(
-      `generate @nx/react:storybook-configuration ${appName} --generateStories --no-interactive`,
-      {
-        silenceError: true,
-      }
-    );
-
     runCLI(`build-storybook ${appName}`);
-    checkFilesExist(`dist/storybook/${appName}/index.html`);
-  }, 1_000_000);
+    checkFilesExist(`${appName}/storybook-static/index.html`);
+  }, 600_000);
 });

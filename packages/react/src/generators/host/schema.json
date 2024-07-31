@@ -1,5 +1,5 @@
 {
-  "$schema": "http://json-schema.org/schema",
+  "$schema": "https://json-schema.org/schema",
   "$id": "GeneratorReactHost",
   "cli": "nx",
   "title": "Generate Module Federation Setup for React Host App",
@@ -43,11 +43,11 @@
           },
           {
             "value": "scss",
-            "label": "SASS(.scss)       [ http://sass-lang.com                     ]"
+            "label": "SASS(.scss)       [ https://sass-lang.com                     ]"
           },
           {
             "value": "less",
-            "label": "LESS              [ http://lesscss.org                       ]"
+            "label": "LESS              [ https://lesscss.org                       ]"
           },
           {
             "value": "styled-components",
@@ -74,6 +74,11 @@
       "enum": ["eslint"],
       "default": "eslint"
     },
+    "dynamic": {
+      "type": "boolean",
+      "description": "Should the host application use dynamic federation?",
+      "default": false
+    },
     "skipFormat": {
       "description": "Skip formatting files.",
       "type": "boolean",
@@ -94,8 +99,9 @@
     },
     "e2eTestRunner": {
       "type": "string",
-      "enum": ["cypress", "none"],
-      "description": "Test runner to use for end to end (e2e) tests.",
+      "enum": ["cypress", "playwright", "none"],
+      "description": "Test runner to use for end to end (E2E) tests.",
+      "x-prompt": "Which E2E test runner would you like to use?",
       "default": "cypress"
     },
     "tags": {
@@ -165,7 +171,7 @@
     },
     "typescriptConfiguration": {
       "type": "boolean",
-      "description": "Whether the module federation configuration and webpack configuration files should use TS.",
+      "description": "Whether the module federation configuration and webpack configuration files should use TS. When --js is used, this flag is ignored.",
       "default": true
     }
   },

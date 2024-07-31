@@ -1,7 +1,7 @@
 import { Linter } from '@nx/eslint';
 
 export interface StorybookConfigureSchema {
-  name: string;
+  project: string;
   interactionTests?: boolean;
   generateStories?: boolean;
   js?: boolean;
@@ -12,4 +12,5 @@ export interface StorybookConfigureSchema {
   configureCypress?: boolean;
   generateCypressSpecs?: boolean;
   cypressDirectory?: string;
+  addPlugin?: boolean;
 }

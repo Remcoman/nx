@@ -37,7 +37,7 @@ export type {
   HasherContext,
 } from './config/misc-interfaces';
 
-// TODO(v18): Remove this export
+// TODO(v19): Remove this export
 /**
  * @category Workspace
  */
@@ -52,6 +52,7 @@ export type {
   ProjectTargetConfigurator,
   CreateNodes,
   CreateNodesFunction,
+  CreateNodesResult,
   CreateNodesContext,
   CreateDependencies,
   CreateDependenciesContext,

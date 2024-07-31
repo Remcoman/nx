@@ -13,7 +13,19 @@ describe('federate-module', () => {
     remote: 'my-remote',
     path: 'my-remote/src/my-federated-module.ts',
     style: 'css',
+    skipFormat: true,
   };
+  // TODO(@jaysoo): Turn this back to adding the plugin
+  let originalEnv: string;
+
+  beforeEach(() => {
+    originalEnv = process.env.NX_ADD_PLUGINS;
+    process.env.NX_ADD_PLUGINS = 'false';
+  });
+
+  afterEach(() => {
+    process.env.NX_ADD_PLUGINS = originalEnv;
+  });
 
   beforeAll(() => {
     tree = createTreeWithEmptyWorkspace();
@@ -32,10 +44,10 @@ describe('federate-module', () => {
     it('should contain an entry for the new path for module federation', async () => {
       await federateModuleGenerator(tree, schema);
 
-      expect(tree.exists('my-remote/module-federation.config.js')).toBe(true);
+      expect(tree.exists('my-remote/module-federation.config.ts')).toBe(true);
 
       const content = tree.read(
-        'my-remote/module-federation.config.js',
+        'my-remote/module-federation.config.ts',
         'utf-8'
       );
       expect(content).toContain(
@@ -77,7 +89,7 @@ describe('federate-module', () => {
 
     it('should append the new path to the module federation config', async () => {
       let content = tree.read(
-        `${remoteSchema.name}/module-federation.config.js`,
+        `${remoteSchema.name}/module-federation.config.ts`,
         'utf-8'
       );
 
@@ -91,7 +103,7 @@ describe('federate-module', () => {
       });
 
       content = tree.read(
-        `${remoteSchema.name}/module-federation.config.js`,
+        `${remoteSchema.name}/module-federation.config.ts`,
         'utf-8'
       );
       expect(content).toContain(

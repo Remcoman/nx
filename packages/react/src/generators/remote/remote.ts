@@ -20,6 +20,9 @@ import { Schema } from './schema';
 import setupSsrGenerator from '../setup-ssr/setup-ssr';
 import { setupSsrForRemote } from './lib/setup-ssr-for-remote';
 import { setupTspathForRemote } from './lib/setup-tspath-for-remote';
+import { addRemoteToDynamicHost } from './lib/add-remote-to-dynamic-host';
+import { addMfEnvToTargetDefaultInputs } from '../../utils/add-mf-env-to-inputs';
+import { maybeJs } from '../../utils/maybe-js';
 
 export function addModuleFederationFiles(
   host: Tree,
@@ -30,6 +33,13 @@ export function addModuleFederationFiles(
     ...options,
     tmpl: '',
   };
+
+  generateFiles(
+    host,
+    join(__dirname, `./files/${options.js ? 'common' : 'common-ts'}`),
+    options.appProjectRoot,
+    templateVariables
+  );
 
   const pathToModuleFederationFiles = options.typescriptConfiguration
     ? 'module-federation-ts'
@@ -71,7 +81,14 @@ export async function remoteGeneratorInternal(host: Tree, schema: Schema) {
   const tasks: GeneratorCallback[] = [];
   const options: NormalizedSchema<Schema> = {
     ...(await normalizeOptions<Schema>(host, schema, '@nx/react:remote')),
-    typescriptConfiguration: schema.typescriptConfiguration ?? false,
+    // when js is set to true, we want to use the js configuration
+    js: schema.js ?? false,
+    typescriptConfiguration: schema.js
+      ? false
+      : schema.typescriptConfiguration ?? true,
+    dynamic: schema.dynamic ?? false,
+    // TODO(colum): remove when MF works with Crystal
+    addPlugin: false,
   };
   const initAppTask = await applicationGenerator(host, {
     ...options,
@@ -89,8 +106,8 @@ export async function remoteGeneratorInternal(host: Tree, schema: Schema) {
   // Renaming original entry file so we can use `import(./bootstrap)` in
   // new entry file.
   host.rename(
-    join(options.appProjectRoot, 'src/main.tsx'),
-    join(options.appProjectRoot, 'src/bootstrap.tsx')
+    join(options.appProjectRoot, maybeJs(options, 'src/main.tsx')),
+    join(options.appProjectRoot, maybeJs(options, 'src/bootstrap.tsx'))
   );
 
   addModuleFederationFiles(host, options);
@@ -119,6 +136,27 @@ export async function remoteGeneratorInternal(host: Tree, schema: Schema) {
     );
     updateProjectConfiguration(host, options.projectName, projectConfig);
   }
+  if (!options.setParserOptionsProject) {
+    host.delete(
+      joinPathFragments(options.appProjectRoot, 'tsconfig.lint.json')
+    );
+  }
+
+  if (options.host && options.dynamic) {
+    const hostConfig = readProjectConfiguration(host, schema.host);
+    const pathToMFManifest = joinPathFragments(
+      hostConfig.sourceRoot,
+      'assets/module-federation.manifest.json'
+    );
+    addRemoteToDynamicHost(
+      host,
+      options.name,
+      options.devServerPort,
+      pathToMFManifest
+    );
+  }
+
+  addMfEnvToTargetDefaultInputs(host);
 
   if (!options.skipFormat) {
     await formatFiles(host);

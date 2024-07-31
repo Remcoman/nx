@@ -2,7 +2,7 @@
   "name": "remote",
   "factory": "./src/generators/remote/remote#remoteInternal",
   "schema": {
-    "$schema": "http://json-schema.org/schema",
+    "$schema": "https://json-schema.org/schema",
     "$id": "NxMFRemote",
     "cli": "nx",
     "title": "Nx Module Federation Remote App",
@@ -52,15 +52,15 @@
             { "value": "css", "label": "CSS" },
             {
               "value": "scss",
-              "label": "SASS(.scss)  [ http://sass-lang.com   ]"
+              "label": "SASS(.scss)  [ https://sass-lang.com   ]"
             },
             {
               "value": "sass",
-              "label": "SASS(.sass)  [ http://sass-lang.com   ]"
+              "label": "SASS(.sass)  [ https://sass-lang.com   ]"
             },
             {
               "value": "less",
-              "label": "LESS         [ http://lesscss.org     ]"
+              "label": "LESS         [ https://lesscss.org     ]"
             }
           ]
         }
@@ -155,9 +155,9 @@
         "x-priority": "internal"
       },
       "standalone": {
-        "description": "Whether to generate a remote application with standalone components. _Note: This is only supported in Angular versions >= 14.1.0_",
+        "description": "Whether to generate a remote application with standalone components.",
         "type": "boolean",
-        "default": false
+        "default": true
       },
       "ssr": {
         "description": "Whether to configure SSR for the remote application to be consumed by a host application using SSR.",

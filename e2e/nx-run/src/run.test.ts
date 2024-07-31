@@ -9,7 +9,6 @@ import {
   runCLI,
   runCLIAsync,
   runCommand,
-  setMaxWorkers,
   tmpProjPath,
   uniq,
   updateFile,
@@ -17,11 +16,12 @@ import {
 } from '@nx/e2e/utils';
 import { PackageJson } from 'nx/src/utils/package-json';
 import * as path from 'path';
-import { join } from 'path';
 
 describe('Nx Running Tests', () => {
   let proj: string;
-  beforeAll(() => (proj = newProject()));
+  beforeAll(
+    () => (proj = newProject({ packages: ['@nx/js', '@nx/web', '@nx/node'] }))
+  );
   afterAll(() => cleanupProject());
 
   // Ensures that nx.json is restored to its original state after each test
@@ -130,7 +130,6 @@ describe('Nx Running Tests', () => {
       beforeAll(async () => {
         app = uniq('myapp');
         runCLI(`generate @nx/web:app ${app}`);
-        setMaxWorkers(join('apps', app, 'project.json'));
       });
 
       it('should support using {projectRoot} in options blocks in project.json', async () => {
@@ -331,13 +330,13 @@ describe('Nx Running Tests', () => {
       runCLI(`generate @nx/web:app ${myapp}`);
 
       const buildWithDaemon = runCLI(`build ${myapp}`, {
-        env: { ...process.env, NX_DAEMON: 'false' },
+        env: { NX_DAEMON: 'false' },
       });
 
       expect(buildWithDaemon).toContain('Successfully ran target build');
 
       const buildAgain = runCLI(`build ${myapp}`, {
-        env: { ...process.env, NX_DAEMON: 'false' },
+        env: { NX_DAEMON: 'false' },
       });
 
       expect(buildAgain).toContain('[local cache]');
@@ -349,7 +348,7 @@ describe('Nx Running Tests', () => {
 
       // Should work within the project directory
       expect(runCommand(`cd apps/${myapp}/src && npx nx build`)).toContain(
-        `nx run ${myapp}:build:production`
+        `nx run ${myapp}:build`
       );
     }, 10000);
 
@@ -446,7 +445,9 @@ describe('Nx Running Tests', () => {
               command: 'echo PREP',
             },
           };
-          config.targets.build.dependsOn = ['prep', '^build'];
+          config.targets.build = {
+            dependsOn: ['prep', '^build'],
+          };
           return config;
         });
 
@@ -607,14 +608,14 @@ describe('Nx Running Tests', () => {
       expect(buildConfig).toContain(
         `Running target build for 2 projects and 1 task they depend on:`
       );
-      expect(buildConfig).toContain(`run ${appA}:build:production`);
+      expect(buildConfig).toContain(`run ${appA}:build`);
       expect(buildConfig).toContain(`run ${libA}:build`);
       expect(buildConfig).toContain(`run ${libC}:build`);
       expect(buildConfig).toContain('Successfully ran target build');
 
       // testing run many with daemon disabled
       const buildWithDaemon = runCLI(`run-many --target=build`, {
-        env: { ...process.env, NX_DAEMON: 'false' },
+        env: { NX_DAEMON: 'false' },
       });
       expect(buildWithDaemon).toContain(`Successfully ran target build`);
     }, 1000000);
@@ -627,7 +628,7 @@ describe('Nx Running Tests', () => {
 
       let outputs = runCLI(
         // Options with lists can be specified using multiple args or with a delimiter (comma or space).
-        `run-many -t build -t test -p ${myapp1} ${myapp2} --ci`
+        `run-many -t build -t test -p ${myapp1} ${myapp2}`
       );
       expect(outputs).toContain('Running targets build, test for 2 projects:');
 
@@ -638,13 +639,21 @@ describe('Nx Running Tests', () => {
 
   describe('exec', () => {
     let pkg: string;
+    let pkg2: string;
     let pkgRoot: string;
+    let pkg2Root: string;
     let originalRootPackageJson: PackageJson;
 
     beforeAll(() => {
       originalRootPackageJson = readJson<PackageJson>('package.json');
       pkg = uniq('package');
+      pkg2 = uniq('package');
       pkgRoot = tmpProjPath(path.join('libs', pkg));
+      pkg2Root = tmpProjPath(path.join('libs', pkg2));
+      runCLI(`generate @nx/js:lib ${pkg} --bundler=none --unitTestRunner=none`);
+      runCLI(
+        `generate @nx/js:lib ${pkg2} --bundler=none --unitTestRunner=none`
+      );
 
       updateJson<PackageJson>('package.json', (v) => {
         v.workspaces = ['libs/*'];
@@ -660,8 +669,31 @@ describe('Nx Running Tests', () => {
             build: 'nx exec -- echo HELLO',
             'build:option': 'nx exec -- echo HELLO WITH OPTION',
           },
+          nx: {
+            targets: {
+              build: {
+                cache: true,
+              },
+            },
+          },
         })
       );
+
+      updateFile(
+        `libs/${pkg2}/package.json`,
+        JSON.stringify(<PackageJson>{
+          name: pkg2,
+          version: '0.0.1',
+          scripts: {
+            build: "nx exec -- echo '$NX_PROJECT_NAME'",
+          },
+        })
+      );
+
+      updateJson(`libs/${pkg2}/project.json`, (content) => {
+        content['implicitDependencies'] = [pkg];
+        return content;
+      });
     });
 
     afterAll(() => {
@@ -674,6 +706,39 @@ describe('Nx Running Tests', () => {
       });
       expect(output).toContain('HELLO');
       expect(output).toContain(`nx run ${pkg}:build`);
+    });
+
+    it('should run adhoc tasks in topological order', () => {
+      let output = runCLI('exec -- echo HELLO');
+      expect(output).toContain('HELLO');
+
+      output = runCLI(`build ${pkg}`);
+      expect(output).toContain(pkg);
+      expect(output).not.toContain(pkg2);
+
+      output = runCommand('npm run build', {
+        cwd: pkgRoot,
+      });
+      expect(output).toContain(pkg);
+      expect(output).not.toContain(pkg2);
+
+      output = runCLI(`exec -- echo '$NX_PROJECT_NAME'`).replace(/\s+/g, ' ');
+      expect(output).toContain(pkg);
+      expect(output).toContain(pkg2);
+
+      output = runCLI("exec -- echo '$NX_PROJECT_ROOT_PATH'").replace(
+        /\s+/g,
+        ' '
+      );
+      expect(output).toContain(`${path.join('libs', pkg)}`);
+      expect(output).toContain(`${path.join('libs', pkg2)}`);
+
+      output = runCLI(`exec --projects ${pkg} -- echo WORLD`);
+      expect(output).toContain('WORLD');
+
+      output = runCLI(`exec --projects ${pkg} -- echo '$NX_PROJECT_NAME'`);
+      expect(output).toContain(pkg);
+      expect(output).not.toContain(pkg2);
     });
 
     it('should work for npm scripts with delimiter', () => {
@@ -690,7 +755,7 @@ describe('Nx Running Tests', () => {
     });
 
     describe('caching', () => {
-      it('shoud cache subsequent calls', () => {
+      it('should cache subsequent calls', () => {
         runCommand('npm run build', {
           cwd: pkgRoot,
         });
@@ -701,7 +766,6 @@ describe('Nx Running Tests', () => {
       });
 
       it('should read outputs', () => {
-        console.log(pkgRoot);
         const nodeCommands = [
           "const fs = require('fs')",
           "fs.mkdirSync('../../tmp/exec-outputs-test', {recursive: true})",
@@ -718,16 +782,16 @@ describe('Nx Running Tests', () => {
             nx: {
               targets: {
                 build: {
+                  cache: true,
                   outputs: ['{workspaceRoot}/tmp/exec-outputs-test'],
                 },
               },
             },
           })
         );
-        const out = runCommand('npm run build', {
+        runCommand('npm run build', {
           cwd: pkgRoot,
         });
-        console.log(out);
         expect(
           fileExists(tmpProjPath('tmp/exec-outputs-test/file.txt'))
         ).toBeTruthy();

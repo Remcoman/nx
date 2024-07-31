@@ -6,7 +6,7 @@ import { requireNx } from '../../nx';
 
 let { readCachedProjectGraph, splitTarget, splitByColons } = requireNx();
 
-// TODO: Remove this in Nx 18 when Nx 16.7.0 is no longer supported
+// TODO: Remove this in Nx 19 when Nx 16.7.0 is no longer supported
 splitTarget = splitTarget ?? require('nx/src/utils/split-target').splitTarget;
 splitByColons =
   splitByColons ?? ((s: string) => s.split(':') as [string, ...string[]]);
@@ -66,7 +66,8 @@ export function parseTargetString(
   if (
     !projectGraph.nodes[maybeProject] &&
     projectGraphOrCtx &&
-    'projectName' in projectGraphOrCtx
+    'projectName' in projectGraphOrCtx &&
+    maybeProject !== projectGraphOrCtx.projectName
   ) {
     targetString = `${projectGraphOrCtx.projectName}:${targetString}`;
   }

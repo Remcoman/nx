@@ -1,4 +1,5 @@
 import {
+  checkFilesExist,
   cleanupProject,
   newProject,
   rmDist,
@@ -11,8 +12,8 @@ import {
 import { join } from 'path';
 
 describe('Webpack Plugin', () => {
-  beforeEach(() => newProject());
-  afterEach(() => cleanupProject());
+  beforeAll(() => newProject());
+  afterAll(() => cleanupProject());
 
   it('should be able to setup project to build node programs with webpack and different compilers', async () => {
     const myPkg = uniq('my-pkg');
@@ -27,13 +28,31 @@ describe('Webpack Plugin', () => {
     updateFile(
       `libs/${myPkg}/webpack.config.js`,
       `
-const { composePlugins, withNx } = require('@nx/webpack');
+      const path  = require('path');
+      const { NxWebpackPlugin } = require('@nx/webpack');
+      
+      class DebugPlugin {
+        apply(compiler) {
+          console.log('scriptType is ' + compiler.options.output.scriptType);
+        }
+      }
 
-module.exports = composePlugins(withNx(), (config) => {
-  console.log('scriptType is ' + config.output.scriptType);
-  return config;
-});
-`
+      module.exports = {
+        target: 'node',
+        output: {
+          path: path.join(__dirname, '../../dist/libs/${myPkg}')
+        },
+        plugins: [
+          new NxWebpackPlugin({
+            compiler: 'tsc',
+            main: './src/index.ts',
+            tsConfig: './tsconfig.lib.json',
+            outputHashing: 'none',
+            optimization: false,
+          }),
+          new DebugPlugin()
+        ]
+      };`
     );
 
     rmDist();
@@ -86,7 +105,7 @@ module.exports = composePlugins(withNx(), (config) => {
 
     updateFile(
       `libs/${myPkg}/.babelrc`,
-      `{ "presets": ["@nx/js/babel", "./custom-preset"] } `
+      `{ 'presets': ['@nx/js/babel', './custom-preset'] } `
     );
     updateFile(
       `libs/${myPkg}/custom-preset.js`,
@@ -105,5 +124,39 @@ module.exports = composePlugins(withNx(), (config) => {
       },
     });
     expect(output).toContain('Babel env is babelEnv');
+  }, 500_000);
+
+  it('should be able to build with NxWebpackPlugin and a standard webpack config file', () => {
+    const appName = uniq('app');
+    runCLI(`generate @nx/web:app ${appName} --bundler webpack`);
+    updateFile(`apps/${appName}/src/main.ts`, `console.log('Hello');\n`);
+
+    updateFile(
+      `apps/${appName}/webpack.config.js`,
+      `
+      const path  = require('path');
+      const { NxWebpackPlugin } = require('@nx/webpack');
+
+      module.exports = {
+        target: 'node',
+        output: {
+          path: path.join(__dirname, '../../dist/${appName}')
+        },
+        plugins: [
+          new NxWebpackPlugin({
+            compiler: 'tsc',
+            main: 'apps/${appName}/src/main.ts',
+            tsConfig: 'apps/${appName}/tsconfig.app.json',
+            outputHashing: 'none',
+            optimization: false,
+          })
+        ]
+      };`
+    );
+
+    runCLI(`build ${appName}`);
+
+    let output = runCommand(`node dist/${appName}/main.js`);
+    expect(output).toMatch(/Hello/);
   }, 500_000);
 });

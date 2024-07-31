@@ -1,4 +1,3 @@
-import { stripIndents, updateJson } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import scamGenerator from '../scam/scam';
 import { generateTestApplication } from '../utils/testing';
@@ -7,8 +6,12 @@ import { scamToStandalone } from './scam-to-standalone';
 describe('scam-to-standalone', () => {
   it('should convert an inline scam to standalone', async () => {
     const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
-    await generateTestApplication(tree, { name: 'foo' });
-    await scamGenerator(tree, { name: 'bar', project: 'foo' });
+    await generateTestApplication(tree, { name: 'foo', skipFormat: true });
+    await scamGenerator(tree, {
+      name: 'bar',
+      project: 'foo',
+      skipFormat: true,
+    });
 
     tree.write(
       'foo/src/app/mymodule.module.ts',
@@ -35,7 +38,7 @@ describe('scam-to-standalone', () => {
         imports: [CommonModule],
         selector: 'proj-bar',
         templateUrl: './bar.component.html',
-        styleUrls: ['./bar.component.css'],
+        styleUrl: './bar.component.css',
       })
       export class BarComponent {}
       "
@@ -77,26 +80,5 @@ describe('scam-to-standalone', () => {
       });
       "
     `);
-  });
-
-  it('should error correctly when Angular version does not support standalone', async () => {
-    // ARRANGE
-    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
-    updateJson(tree, 'package.json', (json) => ({
-      ...json,
-      dependencies: {
-        '@angular/core': '14.0.0',
-      },
-    }));
-
-    // ACT & ASSERT
-    await expect(
-      scamToStandalone(tree, {
-        component: 'src/app/bar/bar.component.ts',
-        project: 'foo',
-      })
-    ).rejects
-      .toThrow(stripIndents`This generator is only supported with Angular >= 14.1.0. You are currently using 14.0.0.
-    You can resolve this error by migrating to Angular 14.1.0.`);
   });
 });

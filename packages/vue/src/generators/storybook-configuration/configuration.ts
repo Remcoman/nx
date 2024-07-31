@@ -5,7 +5,7 @@ import { nxVersion } from '../../utils/versions';
 
 async function generateStories(host: Tree, schema: StorybookConfigureSchema) {
   await storiesGenerator(host, {
-    project: schema.name,
+    project: schema.project,
     js: schema.js,
     ignorePaths: schema.ignorePaths,
     skipFormat: true,
@@ -13,7 +13,17 @@ async function generateStories(host: Tree, schema: StorybookConfigureSchema) {
   });
 }
 
-export async function storybookConfigurationGenerator(
+export function storybookConfigurationGenerator(
+  host: Tree,
+  schema: StorybookConfigureSchema
+) {
+  return storybookConfigurationGeneratorInternal(host, {
+    addPlugin: false,
+    ...schema,
+  });
+}
+
+export async function storybookConfigurationGeneratorInternal(
   host: Tree,
   schema: StorybookConfigureSchema
 ) {
@@ -22,7 +32,7 @@ export async function storybookConfigurationGenerator(
   >('@nx/storybook', nxVersion);
 
   const installTask = await configurationGenerator(host, {
-    name: schema.name,
+    project: schema.project,
     js: schema.js,
     linter: schema.linter,
     tsConfiguration: schema.tsConfiguration ?? true, // default is true
@@ -30,6 +40,7 @@ export async function storybookConfigurationGenerator(
     configureStaticServe: schema.configureStaticServe,
     uiFramework: '@storybook/vue3-vite',
     skipFormat: true,
+    addPlugin: schema.addPlugin,
   });
 
   if (schema.generateStories) {

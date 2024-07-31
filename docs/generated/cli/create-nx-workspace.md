@@ -37,14 +37,6 @@ Type: `string`
 
 Bundler to be used to build the app
 
-### ci
-
-Type: `string`
-
-Choices: [github, circleci, azure, bitbucket-pipelines, gitlab]
-
-Generate a CI workflow file
-
 ### commit.email
 
 Type: `string`
@@ -119,11 +111,19 @@ Type: `boolean`
 
 Enable the App Router for Next.js
 
-### nxCloud
+### nextSrcDir
 
 Type: `boolean`
 
-Enable distributed caching to make your CI faster
+Generate a 'src/' directory for Next.js
+
+### nxCloud
+
+Type: `string`
+
+Choices: [yes, github, circleci, skip]
+
+Do you want Nx Cloud to make your CI fast?
 
 ### packageManager
 
@@ -139,11 +139,13 @@ Package manager to use
 
 Type: `string`
 
-Customizes the initial content of your workspace. Default presets include: ["apps", "empty", "core", "npm", "ts", "web-components", "angular-monorepo", "angular-standalone", "react-monorepo", "react-standalone", "vue-monorepo", "vue-standalone", "next", "nextjs-standalone", "react-native", "expo", "nest", "express", "react", "angular", "node-standalone", "node-monorepo", "ts-standalone"]. To build your own see https://nx.dev/extending-nx/recipes/create-preset
+Customizes the initial content of your workspace. Default presets include: ["apps", "empty", "core", "npm", "ts", "web-components", "angular-monorepo", "angular-standalone", "react-monorepo", "react-standalone", "vue-monorepo", "vue-standalone", "nuxt", "nuxt-standalone", "next", "nextjs-standalone", "react-native", "expo", "nest", "express", "react", "vue", "angular", "node-standalone", "node-monorepo", "ts-standalone"]. To build your own see https://nx.dev/extending-nx/recipes/create-preset
 
 ### routing
 
 Type: `boolean`
+
+Default: `true`
 
 Add a routing setup for an Angular app
 
@@ -155,9 +157,17 @@ Default: `false`
 
 Skip initializing a git repository
 
+### ssr
+
+Type: `boolean`
+
+Enable Server-Side Rendering (SSR) and Static Site Generation (SSG/Prerendering) for the Angular application
+
 ### standaloneApi
 
 Type: `boolean`
+
+Default: `true`
 
 Use Standalone Components if generating an Angular app
 

@@ -4,7 +4,6 @@ import {
   readJson,
   readNxJson,
   readProjectConfiguration,
-  stripIndents,
   updateJson,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
@@ -24,6 +23,8 @@ describe('MF Remote App Generator', () => {
       name: 'test',
       port: 4201,
       typescriptConfiguration: false,
+      standalone: false,
+      skipFormat: true,
     });
 
     // ASSERT
@@ -43,6 +44,8 @@ describe('MF Remote App Generator', () => {
       name: 'test',
       port: 4201,
       typescriptConfiguration: true,
+      standalone: false,
+      skipFormat: true,
     });
 
     // ASSERT
@@ -56,6 +59,8 @@ describe('MF Remote App Generator', () => {
     await generateTestHostApplication(tree, {
       name: 'host',
       typescriptConfiguration: false,
+      standalone: false,
+      skipFormat: true,
     });
 
     // ACT
@@ -63,6 +68,8 @@ describe('MF Remote App Generator', () => {
       name: 'test',
       host: 'host',
       typescriptConfiguration: false,
+      standalone: false,
+      skipFormat: true,
     });
 
     // ASSERT
@@ -77,6 +84,8 @@ describe('MF Remote App Generator', () => {
     await generateTestHostApplication(tree, {
       name: 'host',
       typescriptConfiguration: true,
+      standalone: false,
+      skipFormat: true,
     });
 
     // ACT
@@ -84,6 +93,8 @@ describe('MF Remote App Generator', () => {
       name: 'test',
       host: 'host',
       typescriptConfiguration: true,
+      standalone: false,
+      skipFormat: true,
     });
 
     // ASSERT
@@ -100,6 +111,8 @@ describe('MF Remote App Generator', () => {
       await generateTestRemoteApplication(tree, {
         name: 'test',
         host: 'host',
+        standalone: false,
+        skipFormat: true,
       });
     } catch (error) {
       // ASSERT
@@ -115,11 +128,15 @@ describe('MF Remote App Generator', () => {
     await generateTestRemoteApplication(tree, {
       name: 'existing',
       port: 4201,
+      standalone: false,
+      skipFormat: true,
     });
 
     // ACT
     await generateTestRemoteApplication(tree, {
       name: 'test',
+      standalone: false,
+      skipFormat: true,
     });
 
     // ASSERT
@@ -134,6 +151,8 @@ describe('MF Remote App Generator', () => {
     // ACT
     await generateTestRemoteApplication(tree, {
       name: 'test',
+      standalone: false,
+      skipFormat: true,
     });
 
     // ASSERT
@@ -149,6 +168,8 @@ describe('MF Remote App Generator', () => {
     await generateTestRemoteApplication(tree, {
       name: 'test',
       port: 4201,
+      standalone: false,
+      skipFormat: true,
     });
 
     // ASSERT
@@ -163,7 +184,6 @@ describe('MF Remote App Generator', () => {
     // ACT
     await generateTestRemoteApplication(tree, {
       name: 'test',
-      standalone: true,
       typescriptConfiguration: false,
     });
 
@@ -197,8 +217,8 @@ describe('MF Remote App Generator', () => {
     // ACT
     await generateTestRemoteApplication(tree, {
       name: 'test',
-      standalone: true,
       typescriptConfiguration: true,
+      skipFormat: true,
     });
 
     // ASSERT
@@ -228,6 +248,8 @@ describe('MF Remote App Generator', () => {
     await generateTestRemoteApplication(tree, {
       name: 'remote1',
       e2eTestRunner: E2eTestRunner.None,
+      standalone: false,
+      skipFormat: true,
     });
 
     // ASSERT
@@ -243,6 +265,8 @@ describe('MF Remote App Generator', () => {
     await generateTestRemoteApplication(tree, {
       name: 'test',
       inlineTemplate: true,
+      standalone: false,
+      skipFormat: true,
     });
 
     // ASSERT
@@ -252,10 +276,10 @@ describe('MF Remote App Generator', () => {
 
       @Component({
         selector: 'proj-root',
-        template: '<router-outlet></router-outlet>',
+        template: '<router-outlet></router-outlet>'
+
       })
-      export class AppComponent {}
-      "
+      export class AppComponent {}"
     `);
   });
 
@@ -266,7 +290,7 @@ describe('MF Remote App Generator', () => {
     // ACT
     await generateTestRemoteApplication(tree, {
       name: 'test',
-      standalone: true,
+      skipFormat: true,
     });
 
     // ASSERT
@@ -288,6 +312,7 @@ describe('MF Remote App Generator', () => {
         name: 'test',
         ssr: true,
         typescriptConfiguration: false,
+        standalone: false,
       });
 
       // ASSERT
@@ -335,6 +360,8 @@ describe('MF Remote App Generator', () => {
         name: 'test',
         ssr: true,
         typescriptConfiguration: true,
+        standalone: false,
+        skipFormat: true,
       });
 
       // ASSERT
@@ -372,27 +399,26 @@ describe('MF Remote App Generator', () => {
       ).toMatchSnapshot();
       expect(project.targets['static-server']).toMatchSnapshot();
     });
-  });
 
-  it('should error correctly when Angular version does not support standalone', async () => {
-    // ARRANGE
-    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
-    updateJson(tree, 'package.json', (json) => ({
-      ...json,
-      dependencies: {
-        '@angular/core': '14.0.0',
-      },
-    }));
+    describe('compat', () => {
+      it('should generate the correct main.server.ts', async () => {
+        const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+        updateJson(tree, 'package.json', (json) => ({
+          ...json,
+          dependencies: {
+            '@angular/core': '15.2.0',
+          },
+        }));
 
-    // ACT & ASSERT
-    await expect(
-      generateTestRemoteApplication(tree, {
-        name: 'test',
-        standalone: true,
-      })
-    ).rejects
-      .toThrow(stripIndents`The "standalone" option is only supported in Angular >= 14.1.0. You are currently using 14.0.0.
-    You can resolve this error by removing the "standalone" option or by migrating to Angular 14.1.0.`);
+        await generateTestRemoteApplication(tree, {
+          name: 'test',
+          ssr: true,
+          skipFormat: true,
+        });
+
+        expect(tree.read(`test/src/main.server.ts`, 'utf-8')).toMatchSnapshot();
+      });
+    });
   });
 
   describe('--project-name-and-root-format=derived', () => {
@@ -404,6 +430,8 @@ describe('MF Remote App Generator', () => {
         port: 4201,
         projectNameAndRootFormat: 'derived',
         typescriptConfiguration: false,
+        standalone: false,
+        skipFormat: true,
       });
 
       expect(tree.exists('apps/test/webpack.config.js')).toBe(true);
@@ -419,6 +447,8 @@ describe('MF Remote App Generator', () => {
         directory: 'shared',
         projectNameAndRootFormat: 'derived',
         typescriptConfiguration: false,
+        standalone: false,
+        skipFormat: true,
       });
 
       expect(tree.exists('apps/shared/test/webpack.config.js')).toBe(true);

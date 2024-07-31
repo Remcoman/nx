@@ -10,22 +10,27 @@ import {
   tmpProjPath,
   uniq,
   updateFile,
-  setMaxWorkers,
   updateJson,
 } from '@nx/e2e/utils';
 import { execSync } from 'child_process';
 import { join } from 'path';
 
 describe('Node Applications + webpack', () => {
-  beforeEach(() => newProject());
+  beforeAll(() =>
+    newProject({
+      packages: ['@nx/node'],
+    })
+  );
 
-  afterEach(() => cleanupProject());
+  afterAll(() => cleanupProject());
 
   it('should generate an app using webpack', async () => {
     const app = uniq('nodeapp');
 
-    runCLI(`generate @nx/node:app ${app} --bundler=webpack --no-interactive`);
-    setMaxWorkers(join('apps', app, 'project.json'));
+    // This fails with Crystal enabled because `--optimization` is not a correct flag to pass to `webpack`.
+    runCLI(`generate @nx/node:app ${app} --bundler=webpack --no-interactive`, {
+      env: { NX_ADD_PLUGINS: 'false' },
+    });
 
     checkFilesExist(`apps/${app}/webpack.config.js`);
 

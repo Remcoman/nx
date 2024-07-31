@@ -1,7 +1,7 @@
 import { Linter } from '@nx/eslint';
 
 export interface StorybookConfigureSchema {
-  name: string;
+  project: string;
   interactionTests?: boolean;
   generateStories?: boolean;
   js?: boolean;
@@ -9,4 +9,5 @@ export interface StorybookConfigureSchema {
   linter?: Linter;
   ignorePaths?: string[];
   configureStaticServe?: boolean;
+  addPlugin?: boolean;
 }

@@ -47,6 +47,14 @@ export function nxComponentTestingPreset(
   pathToConfig: string,
   options?: NxComponentTestingOptions
 ) {
+  if (global.NX_GRAPH_CREATION || global.NX_CYPRESS_INIT_GENERATOR_RUNNING) {
+    // this is only used by plugins, so we don't need the component testing
+    // options, cast to any to avoid type errors
+    return nxBaseCypressPreset(pathToConfig, {
+      testingType: 'component',
+    }) as any;
+  }
+
   let graph: ProjectGraph;
   try {
     graph = readCachedProjectGraph();
@@ -70,10 +78,13 @@ ${e.stack ? e.stack : e}`
     ctConfigurationName
   );
 
-  const buildTarget = getBuildableTarget(ctContext);
+  const buildTarget = options?.buildTarget
+    ? parseTargetString(options.buildTarget, graph)
+    : // for backwards compat, if no buildTargetin the preset options, get it from the target options
+      getBuildableTarget(ctContext);
 
   if (!buildTarget.project && !graph.nodes?.[buildTarget.project]?.data) {
-    throw new Error(stripIndents`Unable to find project configuration for build target. 
+    throw new Error(stripIndents`Unable to find project configuration for build target.
     Project Name? ${buildTarget.project}
     Has project config? ${!!graph.nodes?.[buildTarget.project]?.data}`);
   }
@@ -295,8 +306,8 @@ Note: this may fail, setting the correct 'sourceRoot' for ${buildContext.project
 }
 
 function withSchemaDefaults(options: any): BrowserBuilderSchema {
-  if (!options.main) {
-    throw new Error('Missing executor options "main"');
+  if (!options.main && !options.browser) {
+    throw new Error('Missing executor options "main" and "browser"');
   }
   if (!options.index) {
     throw new Error('Missing executor options "index"');
@@ -322,6 +333,7 @@ function withSchemaDefaults(options: any): BrowserBuilderSchema {
   options.outputHashing ??= 'none';
   options.progress ??= true;
   options.scripts ??= [];
+  options.main ??= options.browser;
 
   return options;
 }

@@ -48,12 +48,10 @@ import {
 } from '../../utils/package-manager';
 import { handleErrors } from '../../utils/params';
 import {
-  connectToNxCloudCommand,
+  connectToNxCloudWithPrompt,
   onlyDefaultRunnerIsUsed,
 } from '../connect/connect-to-nx-cloud';
 import { output } from '../../utils/output';
-import { messages, recordStat } from '../../utils/ab-testing';
-import { nxVersion } from '../../utils/versions';
 import { existsSync, readFileSync } from 'fs';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { isCI } from '../../utils/is-ci';
@@ -62,6 +60,10 @@ import { readNxJson } from '../../config/configuration';
 import { runNxSync } from '../../utils/child-process';
 import { daemonClient } from '../../daemon/client/client';
 import { isNxCloudUsed } from '../../utils/nx-cloud-utils';
+import {
+  createProjectGraphAsync,
+  readProjectsConfigurationFromProjectGraph,
+} from '../../project-graph/project-graph';
 
 export interface ResolvedMigrationConfiguration extends MigrationsJson {
   packageGroup?: ArrayPackageGroup;
@@ -1218,16 +1220,7 @@ async function generateMigrationsJsonAndUpdatePackageJson(
         !isCI() &&
         !isNxCloudUsed(originalNxJson)
       ) {
-        const useCloud = await connectToNxCloudCommand({
-          promptOverride: messages.getPromptMessage('nxCloudMigration'),
-          interactive: true,
-        });
-        await recordStat({
-          command: 'migrate',
-          nxVersion,
-          useCloud,
-          meta: messages.codeOfSelectedPromptMessage('nxCloudMigration'),
-        });
+        await connectToNxCloudWithPrompt('migrate');
         originalPackageJson = readJsonFile<PackageJson>(
           join(root, 'package.json')
         );
@@ -1288,7 +1281,7 @@ async function generateMigrationsJsonAndUpdatePackageJson(
               `- To learn more go to https://nx.dev/recipes/tips-n-tricks/advanced-update`,
             ]
           : [
-              `- To learn more go to https://nx.dev/core-features/automate-updating-dependencies`,
+              `- To learn more go to https://nx.dev/features/automate-updating-dependencies`,
             ]),
         ...(showConnectToCloudMessage()
           ? [
@@ -1404,6 +1397,9 @@ export async function executeMigrations(
           root,
           m.package,
           m.name,
+          readProjectsConfigurationFromProjectGraph(
+            await createProjectGraphAsync()
+          ).projects,
           isVerbose
         );
 
